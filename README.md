@@ -188,9 +188,14 @@ change them without rebuilding the image.
   removes accounts that are no longer in the file.
 - **Prebuilt image.** The **Publish image** workflow
   ([`.github/workflows/publish-image.yml`](./.github/workflows/publish-image.yml))
-  pushes `ghcr.io/<owner>/calino:latest` and a `sha-<commit>` tag for amd64
-  and arm64 on every push to `main`. The JS bundle is built once on the
-  runner's platform, so the arm64 image needs no emulation.
+  pushes the public image `ghcr.io/chrisf4lc0n/calino:latest`, plus a
+  `sha-<commit>` tag, for amd64 and arm64 on every push to `main`. The JS
+  bundle is built once on the runner's platform, so the arm64 image needs no
+  emulation.
+
+The upstream image (`ghcr.io/ivan-malinovski/calino`) does not read a mounted
+config. Use `ghcr.io/chrisf4lc0n/calino` or an image built from this
+repository.
 - **Portainer stack.** [`deploy/portainer-stack.yml`](./deploy/portainer-stack.yml)
   runs the prebuilt image with the config mounted read-only.
 
@@ -198,8 +203,8 @@ change them without rebuilding the image.
 
 | | A: Prebuilt image (recommended) | B: Build on the host |
 |---|---|---|
-| Image | Pulled from `ghcr.io/<owner>/calino:latest` | Built from a clone with `docker compose build` |
-| Needs | The workflow to have run; a public package or a `read:packages` token on the host | Docker and the source on the host |
+| Image | Pulled from `ghcr.io/chrisf4lc0n/calino:latest` | Built from a clone of `https://github.com/chrisf4lc0n/calino` with `docker compose build` |
+| Needs | Docker on the host. The image is public, so no registry login | Docker and the source on the host |
 | Run with | Portainer stack, `docker compose -f deploy/portainer-stack.yml`, or `docker run` | `docker compose up -d --build` with the volume in `docker-compose.yml` uncommented |
 | Update Calino | Pull and redeploy | `git pull`, then rebuild |
 
@@ -207,21 +212,25 @@ In both cases, generate the config first and mount it at
 `/calino/calino.config.json`:
 
 ```bash
-node scripts/calino-config.mjs --out /opt/calino/calino.config.json
+mkdir -p /opt/calino && cd /opt/calino
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/scripts/calino-config.mjs
+node calino-config.mjs --out /opt/calino/calino.config.json
 
 # A: prebuilt image
 docker run -d --name calino --restart unless-stopped -p 8080:8080 \
   -v /opt/calino/calino.config.json:/calino/calino.config.json:ro \
-  ghcr.io/<owner>/calino:latest
+  ghcr.io/chrisf4lc0n/calino:latest
 
 # B: built on the host (after uncommenting the volume in docker-compose.yml)
+git clone https://github.com/chrisf4lc0n/calino.git
+cd calino
 docker compose up -d --build
 ```
 
 To change accounts later, run the generator again on the same file and reload
 the page. You don't need to rebuild or restart.
 
-The full guide covers registry access, Portainer, HTTPS and troubleshooting:
+The full guide covers Portainer, HTTPS and troubleshooting:
 [`docs/DEPLOY_WITH_GENERATED_CONFIG.md`](./docs/DEPLOY_WITH_GENERATED_CONFIG.md).
 The short Portainer reference is [`docs/PORTAINER.md`](./docs/PORTAINER.md).
 

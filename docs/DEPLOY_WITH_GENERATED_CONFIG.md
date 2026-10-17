@@ -6,7 +6,7 @@ calendars, and `.ics` feeds connect by themselves.
 
 You will:
 
-1. Get a Calino image (prebuilt from GitHub, or built yourself).
+1. Get a Calino image (the prebuilt one, or built yourself).
 2. Run `scripts/calino-config.mjs` to create an encrypted `calino.config.json`.
 3. Mount that file into the container and start it.
 4. Open Calino and unlock it with the master password.
@@ -36,31 +36,28 @@ path, but keep it the same everywhere.
 
 Pick one of these:
 
-**Option A: prebuilt image from GitHub (recommended)**
+**Option A: prebuilt image (recommended)**
 
-1. Push the repository to GitHub. The **Publish image** workflow
-   (`.github/workflows/publish-image.yml`) runs on every push to `main`. You can
-   also start it by hand under **Actions → Publish image → Run workflow**.
-2. When it finishes, the image is at `ghcr.io/<your-github-user>/calino:latest`
-   (for amd64 and arm64). Each build also gets a `sha-<commit>` tag.
-3. New GHCR packages are **private**. Choose one of these:
-   - Make the package public: GitHub → your profile → **Packages** →
-     `calino` → **Package settings** → **Change visibility** → Public.
-   - Or keep it private and give the server a token. Create a personal access
-     token with `read:packages`, then either:
-     - in Portainer: **Registries → Add registry → Custom** with URL `ghcr.io`,
-       your GitHub username and the token, or
-     - on the host: `echo <token> | docker login ghcr.io -u <your-github-user> --password-stdin`
-4. Check that the host can pull it:
+The image is `ghcr.io/chrisf4lc0n/calino:latest`, for amd64 and arm64. The
+**Publish image** workflow (`.github/workflows/publish-image.yml`) rebuilds it
+on every push to `main` of
+[chrisf4lc0n/calino](https://github.com/chrisf4lc0n/calino), and each build also
+gets a `sha-<commit>` tag (the first seven characters of the commit) that you
+can pin. The package is public, so the host needs no registry login.
 
-   ```bash
-   docker pull ghcr.io/<your-github-user>/calino:latest
-   ```
+Check that the host can pull it:
+
+```bash
+docker pull ghcr.io/chrisf4lc0n/calino:latest
+```
+
+The upstream image, `ghcr.io/ivan-malinovski/calino`, does not read a mounted
+config, so it does not work with this guide.
 
 **Option B: build it on the host**
 
 ```bash
-git clone https://github.com/<your-github-user>/calino.git
+git clone https://github.com/chrisf4lc0n/calino.git
 cd calino
 docker compose build
 ```
@@ -77,7 +74,7 @@ image any other way. A build without it ignores the mounted file.
 sudo mkdir -p /opt/calino
 sudo chown "$USER" /opt/calino
 cd /opt/calino
-curl -fsSLO https://raw.githubusercontent.com/<your-github-user>/calino/main/scripts/calino-config.mjs
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/scripts/calino-config.mjs
 ```
 
 If you cloned the repository in Option B, you can use
@@ -236,14 +233,15 @@ Pick the setup that matches how you run containers.
 1. Portainer → **Stacks** → **Add stack**. Give the stack a name, e.g.
    `calino`.
 2. Paste the contents of [`deploy/portainer-stack.yml`](../deploy/portainer-stack.yml)
-   into the web editor. Alternatively, choose **Repository** and point it at
-   that file in your repository.
+   into the web editor. Alternatively, choose **Repository** with the
+   repository URL `https://github.com/chrisf4lc0n/calino`, reference
+   `refs/heads/main` and compose path `deploy/portainer-stack.yml`.
 3. Under **Environment variables**, add:
 
    | Name | Value | |
    |---|---|---|
    | `CALINO_CONFIG_FILE` | `/opt/calino/calino.config.json` | required, path **on the host** |
-   | `CALINO_IMAGE` | `ghcr.io/<your-github-user>/calino:latest` | set this if your image is not `ghcr.io/chrisf4lc0n/calino` |
+   | `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calino:latest` | optional; this is the default. Set a `sha-…` tag here to pin a build |
    | `CALINO_PORT` | `8080` | optional host port |
 
 4. Click **Deploy the stack**.
@@ -258,11 +256,11 @@ Use the same stack file without Portainer:
 
 ```bash
 cd /opt/calino
-curl -fsSLO https://raw.githubusercontent.com/<your-github-user>/calino/main/deploy/portainer-stack.yml
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/deploy/portainer-stack.yml
 
 cat > .env <<'EOF'
 CALINO_CONFIG_FILE=/opt/calino/calino.config.json
-CALINO_IMAGE=ghcr.io/<your-github-user>/calino:latest
+CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
 CALINO_PORT=8080
 EOF
 
@@ -275,7 +273,7 @@ docker compose -f portainer-stack.yml up -d
 docker run -d --name calino --restart unless-stopped \
   -p 8080:8080 \
   -v /opt/calino/calino.config.json:/calino/calino.config.json:ro \
-  ghcr.io/<your-github-user>/calino:latest
+  ghcr.io/chrisf4lc0n/calino:latest
 ```
 
 ### Option 4: Image built from source (Step 1, Option B)

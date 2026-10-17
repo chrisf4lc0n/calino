@@ -1,7 +1,7 @@
 # Running Calino from Portainer with a generated config
 
 This setup never builds Calino on your server. GitHub builds the image once per
-push to `main`. Your server pulls it and mounts one file, `calino.config.json`,
+push to `main` of [chrisf4lc0n/calino](https://github.com/chrisf4lc0n/calino). Your server pulls it and mounts one file, `calino.config.json`,
 which holds your accounts, encrypted with a master password. To change
 accounts, regenerate the file and restart the stack.
 
@@ -19,17 +19,15 @@ ghcr.io/chrisf4lc0n/calino ── Caddy serves /calino.config.json (no-store)
                          browser: master password → decrypt → connect
 ```
 
-## 1. Publish the image (once)
+## 1. The image
 
-Push this repository to GitHub. The **Publish image** workflow
-(`.github/workflows/publish-image.yml`) builds `linux/amd64` and `linux/arm64`
-images and pushes them as `ghcr.io/<your-user>/calino:latest`. You can also run
-it from the Actions tab.
+The **Publish image** workflow (`.github/workflows/publish-image.yml`) builds
+`linux/amd64` and `linux/arm64` images and pushes them as
+`ghcr.io/chrisf4lc0n/calino:latest`, plus a `sha-<commit>` tag for each build.
+The package is public, so Portainer needs no registry entry for it.
 
-A new GHCR package is private. Either make it public (GitHub → your profile →
-Packages → `calino` → Package settings → Change visibility), or add `ghcr.io`
-as a registry in Portainer with a personal access token that has
-`read:packages`.
+The upstream image, `ghcr.io/ivan-malinovski/calino`, does not read a mounted
+config.
 
 ## 2. Generate the config
 
@@ -69,14 +67,17 @@ names are readable.
 
 ## 3. Create the stack
 
-Portainer → Stacks → Add stack. Paste `deploy/portainer-stack.yml`, or use
-"Repository" and point it at that file. Then set the environment variables:
+Portainer → Stacks → Add stack. Paste
+[`deploy/portainer-stack.yml`](../deploy/portainer-stack.yml), or use
+"Repository" with the URL `https://github.com/chrisf4lc0n/calino`, reference
+`refs/heads/main` and compose path `deploy/portainer-stack.yml`. Then set the
+environment variables:
 
 | Variable | Example | |
 |---|---|---|
 | `CALINO_CONFIG_FILE` | `/opt/calino/calino.config.json` | required, host path |
 | `CALINO_PORT` | `8080` | optional |
-| `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calino:latest` | optional |
+| `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calino:latest` | optional; the default. Use a `sha-…` tag to pin a build |
 
 Generate the file **before** deploying. If the path does not exist, Docker
 creates an empty directory there and Calino starts without accounts.
