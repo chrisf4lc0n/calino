@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { validateCustomHeaders } from '../features/caldav/client/customHeaders'
 import { loadConfig, type CalinoConfig } from '../lib/configLoader'
+import type { CalendarSelectionEntry } from '../lib/preconfiguredAccounts'
 import {
   decryptWithMasterPassword,
   encryptPassword,
@@ -15,6 +16,8 @@ interface DecryptedCredential {
   username: string
   password: string
   customHeaders?: Record<string, string>
+  // Only these calendars are synced; undefined means all of them.
+  calendars?: CalendarSelectionEntry[]
 }
 
 interface DecryptedWebcalSubscription {
@@ -86,6 +89,26 @@ async function setStoredMasterPassword(password: string | null): Promise<void> {
   }
 }
 
+/**
+ * The decrypted calendar selection of an account. A selection that does not
+ * parse falls back to syncing every calendar rather than none.
+ */
+function parseCalendarSelection(json: string): CalendarSelectionEntry[] | undefined {
+  try {
+    const parsed: unknown = JSON.parse(json)
+    if (!Array.isArray(parsed)) return undefined
+    return parsed
+      .filter(
+        (c): c is CalendarSelectionEntry =>
+          typeof c?.url === 'string' && typeof c?.name === 'string'
+      )
+      .map(({ url, name }) => ({ url, name }))
+  } catch {
+    console.warn('[configStore] Ignoring an unreadable calendar selection')
+    return undefined
+  }
+}
+
 // ─── Store ───────────────────────────────────────────────────────────────────
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
@@ -154,11 +177,18 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         for (const [name, value] of Object.entries(account.headers ?? {})) {
           customHeaders[name] = await decryptWithMasterPassword(value, masterPassword)
         }
+        let calendars: CalendarSelectionEntry[] | undefined
+        if (account.calendars) {
+          calendars = parseCalendarSelection(
+            await decryptWithMasterPassword(account.calendars, masterPassword)
+          )
+        }
         decrypted.push({
           url,
           username,
           password,
           customHeaders: validateCustomHeaders(customHeaders),
+          calendars,
         })
       }
 

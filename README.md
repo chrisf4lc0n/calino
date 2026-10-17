@@ -160,7 +160,70 @@ docker compose up -d
 Calino runs at http://localhost:8080 by default.
 To customize settings (site URL, offline support), create a `.env` file — see [`docs/DOCKER.md`](./docs/DOCKER.md) for full details.
 
-**Preconfigure CalDAV accounts:** Visit `/setup` in any running Calino instance to generate a config file with encrypted credentials. Place it in the project root and rebuild — users will be prompted for a master password instead of entering server details manually. See [`docs/SELF_HOSTED_CONFIG.md`](./docs/SELF_HOSTED_CONFIG.md) for details.
+**Preconfigure CalDAV accounts:** Visit `/setup` in any running Calino instance, or run `scripts/calino-config.mjs`, to generate a config file with encrypted credentials. Mount it into a self-hosted container (see below), or place it in the project root and rebuild — users will be prompted for a master password instead of entering server details manually. See [`docs/SELF_HOSTED_CONFIG.md`](./docs/SELF_HOSTED_CONFIG.md) for details.
+
+## Deploying with a generated config
+
+This fork adds a way to run Calino with all accounts preconfigured and to
+change them without rebuilding the image.
+
+**What it adds**
+
+- **Runtime config.** A self-hosted build reads `calino.config.json` from the
+  server on every page load. The container serves a file mounted at
+  `/calino/calino.config.json` with `Cache-Control: no-store`, and the service
+  worker always fetches it from the network. A config served this way takes
+  precedence over one baked into the bundle at build time.
+- **Config generator.** [`scripts/calino-config.mjs`](./scripts/calino-config.mjs)
+  is a single-file Node.js script (no `npm install`). It asks for each
+  CalDAV/CardDAV account, tests the login, lists the calendars it finds, lets
+  you choose which ones to sync, adds optional `.ics` feeds, and writes the
+  file encrypted with a master password. Run it again on the same file to edit it.
+- **Calendar selection.** Each account in the config can list the calendars to
+  sync. Calendars outside the list are not added, or are removed if they were
+  added before.
+- **Config changes sync.** After the master password is entered, Calino updates
+  the stored accounts to match the current config. It adds new accounts, updates
+  accounts whose password, headers, name or calendar selection changed, and
+  removes accounts that are no longer in the file.
+- **Prebuilt image.** The **Publish image** workflow
+  ([`.github/workflows/publish-image.yml`](./.github/workflows/publish-image.yml))
+  pushes `ghcr.io/<owner>/calino:latest` and a `sha-<commit>` tag for amd64
+  and arm64 on every push to `main`. The JS bundle is built once on the
+  runner's platform, so the arm64 image needs no emulation.
+- **Portainer stack.** [`deploy/portainer-stack.yml`](./deploy/portainer-stack.yml)
+  runs the prebuilt image with the config mounted read-only.
+
+**Two ways to deploy**
+
+| | A: Prebuilt image (recommended) | B: Build on the host |
+|---|---|---|
+| Image | Pulled from `ghcr.io/<owner>/calino:latest` | Built from a clone with `docker compose build` |
+| Needs | The workflow to have run; a public package or a `read:packages` token on the host | Docker and the source on the host |
+| Run with | Portainer stack, `docker compose -f deploy/portainer-stack.yml`, or `docker run` | `docker compose up -d --build` with the volume in `docker-compose.yml` uncommented |
+| Update Calino | Pull and redeploy | `git pull`, then rebuild |
+
+In both cases, generate the config first and mount it at
+`/calino/calino.config.json`:
+
+```bash
+node scripts/calino-config.mjs --out /opt/calino/calino.config.json
+
+# A: prebuilt image
+docker run -d --name calino --restart unless-stopped -p 8080:8080 \
+  -v /opt/calino/calino.config.json:/calino/calino.config.json:ro \
+  ghcr.io/<owner>/calino:latest
+
+# B: built on the host (after uncommenting the volume in docker-compose.yml)
+docker compose up -d --build
+```
+
+To change accounts later, run the generator again on the same file and reload
+the page. You don't need to rebuild or restart.
+
+The full guide covers registry access, Portainer, HTTPS and troubleshooting:
+[`docs/DEPLOY_WITH_GENERATED_CONFIG.md`](./docs/DEPLOY_WITH_GENERATED_CONFIG.md).
+The short Portainer reference is [`docs/PORTAINER.md`](./docs/PORTAINER.md).
 
 ## No-Docker
 

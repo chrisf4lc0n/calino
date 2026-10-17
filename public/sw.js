@@ -34,8 +34,9 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
 
   // Network-first for navigation requests (HTML shell) so users always
-  // see the latest app version. Falls back to cache when offline.
-  if (request.mode === 'navigate') {
+  // see the latest app version, and for the runtime config so a regenerated
+  // calino.config.json takes effect. Falls back to cache when offline.
+  if (request.mode === 'navigate' || new URL(request.url).pathname === '/calino.config.json') {
     event.respondWith(
       fetch(request)
         .then((response) => {

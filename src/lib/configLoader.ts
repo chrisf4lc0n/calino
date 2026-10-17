@@ -9,6 +9,9 @@ export interface PreconfiguredAccount {
   username: MasterEncryptedData
   password: MasterEncryptedData
   headers?: Record<string, MasterEncryptedData>
+  // Encrypted JSON array of { url, name }: the only calendars to sync.
+  // Absent means every calendar on the account.
+  calendars?: MasterEncryptedData
 }
 
 export interface PreconfiguredWebcal {
@@ -29,6 +32,13 @@ export interface CalinoConfig {
 
 declare const __CALINO_CONFIG__: Record<string, unknown> | null
 
+/**
+ * Where a self-hosted deployment serves its config at runtime. The Docker
+ * image maps this path to a mounted file, so the config can change without a
+ * rebuild — regenerate it and reload.
+ */
+const RUNTIME_CONFIG_PATH = 'calino.config.json'
+
 // ─── Config loading ──────────────────────────────────────────────────────────
 
 let cachedConfig: CalinoConfig | null | undefined
@@ -44,6 +54,7 @@ const PreconfiguredAccountSchema = z.object({
   username: MasterEncryptedDataSchema,
   password: MasterEncryptedDataSchema,
   headers: z.record(z.string(), MasterEncryptedDataSchema).optional(),
+  calendars: MasterEncryptedDataSchema.optional(),
 })
 
 const PreconfiguredWebcalSchema = z.object({
@@ -60,9 +71,32 @@ const CalinoConfigEnvelopeSchema = z.object({
 })
 
 /**
+ * Fetch the config the server serves next to the app, or null when there is
+ * none. Only self-hosted (and E2E) builds look for one. A missing file must
+ * not be mistaken for the SPA fallback page, hence the content-type check.
+ */
+async function fetchRuntimeConfig(): Promise<unknown> {
+  if (typeof __CALINO_RUNTIME_CONFIG__ === 'undefined' || !__CALINO_RUNTIME_CONFIG__) return null
+  if (typeof fetch !== 'function') return null
+  try {
+    const response = await fetch(`${import.meta.env.BASE_URL}${RUNTIME_CONFIG_PATH}`, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+    })
+    if (!response.ok) return null
+    if ((response.headers.get('content-type') ?? '').includes('text/html')) return null
+    return await response.json()
+  } catch (err) {
+    console.warn('[configLoader] Could not read runtime config', err)
+    return null
+  }
+}
+
+/**
  * Load self-hosted config.
- * The config is baked into the JS bundle at build time (not served as a separate file).
- * Returns null if no config was provided at build time (not self-hosted mode).
+ * A config served at runtime (/calino.config.json) wins over one baked into
+ * the JS bundle at build time. Returns null if neither exists (not
+ * self-hosted mode).
  */
 export async function loadConfig(): Promise<CalinoConfig | null> {
   // Return cached result if already loaded
@@ -72,12 +106,15 @@ export async function loadConfig(): Promise<CalinoConfig | null> {
 
   // __CALINO_CONFIG__ is injected by Vite's define at build time
   // It's null if calino.config.json doesn't exist
-  if (typeof __CALINO_CONFIG__ === 'undefined' || __CALINO_CONFIG__ === null) {
+  const buildTimeConfig =
+    typeof __CALINO_CONFIG__ === 'undefined' ? null : (__CALINO_CONFIG__ ?? null)
+  const rawConfig = (await fetchRuntimeConfig()) ?? buildTimeConfig
+  if (rawConfig === null) {
     cachedConfig = null
     return null
   }
 
-  const envelope = CalinoConfigEnvelopeSchema.safeParse(__CALINO_CONFIG__)
+  const envelope = CalinoConfigEnvelopeSchema.safeParse(rawConfig)
 
   if (!envelope.success) {
     console.warn('[configLoader] Invalid config, ignoring', envelope.error.issues)

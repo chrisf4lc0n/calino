@@ -1,0 +1,43 @@
+:8080 {
+	request_body {
+		max_size 1mb
+	}
+
+	encode gzip
+
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+		-Server
+	}
+
+	# Runtime config, bind-mounted at /calino/calino.config.json. Never cached,
+	# so a regenerated file applies on the next page load. A missing file is a
+	# plain 404 (not the SPA fallback) and the app falls back to the config
+	# baked in at build time, if any.
+	handle /calino.config.json {
+		root * /calino
+		header Cache-Control "no-store"
+		file_server
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+
+		@assets path /assets/*
+		header @assets Cache-Control "public, immutable"
+
+		@sw path /sw.js
+		header @sw Cache-Control "no-store, no-cache, must-revalidate"
+		header @sw Service-Worker-Allowed "/"
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

@@ -10,6 +10,10 @@ services:
         - CALINO_SELF_HOSTED=${CALINO_SELF_HOSTED:-true}
     ports:
       - "8080:8080"
+    # Optional runtime config, read on every page load (no rebuild needed).
+    # Generate it with scripts/calino-config.mjs; see docs/PORTAINER.md.
+    # volumes:
+    #   - ./calino.config.json:/calino/calino.config.json:ro
     restart: unless-stopped
     # ⚠️ cap_drop ALL removed — Docker Desktop 4.7.1 (runc v1.0.3) has a bug
     # where it drops capabilities needed by the container init process itself,

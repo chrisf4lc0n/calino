@@ -6,6 +6,14 @@
 
 If you self-host Calino, you can preconfigure CalDAV accounts and webcal (`.ics` URL) subscriptions so users don't need to manually enter server URLs, usernames, and passwords. Instead, you encrypt the sensitive values with a master password, and users just enter that master password once to unlock everything — both CalDAV accounts and webcal subscriptions live in the same `calino.config.json` and unlock together.
 
+### Runtime config with a prebuilt image (Portainer)
+
+To run a prebuilt image and change accounts without rebuilding, generate the
+config with the interactive `scripts/calino-config.mjs` and mount it into the
+container. It also lets you choose which calendars each account syncs. See
+[PORTAINER.md](PORTAINER.md). For a full walkthrough from generating the file to a
+running deployment, see [DEPLOY_WITH_GENERATED_CONFIG.md](DEPLOY_WITH_GENERATED_CONFIG.md).
+
 ### Quick Start (Recommended)
 
 The easiest way to generate a config file is the browser-based setup wizard. No Node.js required.
@@ -336,8 +344,8 @@ To test without config: delete `calino.config.json` from project root before bui
 
 ### Known Limitations
 
-- No support for changing master password without re-encrypting all passwords/URLs
-- Config requires a rebuild to update (it's baked into the JS bundle)
+- No support for changing master password without re-encrypting all passwords/URLs (`scripts/calino-config.mjs` does the re-encryption for you)
+- A build-time config requires a rebuild to update (it's baked into the JS bundle); a runtime config mounted at `/calino/calino.config.json` does not — see [PORTAINER.md](PORTAINER.md)
 - Preconfigured accounts and webcal subscriptions are read-only in the settings UI (can't delete or edit them)
 - Lock does not disconnect active CalDAV sessions in the current tab
 - Webcal subscriptions are always read-only in Calino regardless of config, same as manually-added ones

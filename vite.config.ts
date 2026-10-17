@@ -62,6 +62,9 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
     __CALINO_CONFIG__: JSON.stringify(calinoConfig),
     __CALINO_SELF_HOSTED__: JSON.stringify(isSelfHosted),
+    // Whether the app looks for a calino.config.json served next to it. E2E
+    // specs serve one through page.route without making the build self-hosted.
+    __CALINO_RUNTIME_CONFIG__: JSON.stringify(isSelfHosted || process.env.CALINO_E2E_MOCK === '1'),
   },
   plugins: [
     {
