@@ -35,6 +35,9 @@ mounted config.
 
 ## 2. Generate the config
 
+`/opt/calino` is only an example; any folder on the host works if you use it
+consistently, including in `CALINO_CONFIG_FILE` below.
+
 ```bash
 sudo mkdir -p /opt/calino
 sudo chown "$(id -u):$(id -g)" /opt/calino

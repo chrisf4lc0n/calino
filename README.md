@@ -162,7 +162,8 @@ docker compose up -d
 ```
 
 Open http://localhost:8080 and enter the master password. To change accounts,
-run the same generator command again and reload the page.
+run the same generator command again and reload the page. `/opt/calino` is
+only an example path; use any folder, as long as you change it everywhere.
 
 **[`docs/DEPLOY_WITH_GENERATED_CONFIG.md`](./docs/DEPLOY_WITH_GENERATED_CONFIG.md)
 is the full step-by-step guide**: every generator question, how to check each

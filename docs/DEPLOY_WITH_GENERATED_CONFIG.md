@@ -52,7 +52,12 @@ Two things about your calendar servers matter before you begin:
 
 ## Step 1: Make the deployment folder
 
-Everything the deployment needs lives in `/opt/calino` (you can use any other folder on your host, then change the subsequent paths):
+Everything the deployment needs lives in one folder on the host. This guide
+uses `/opt/calino`.
+
+> **`/opt/calino` is only an example.** You can use any folder, such as
+> `/srv/calino` or `~/calino`. If you do, replace `/opt/calino` in every
+> command below, including the `CALINO_CONFIG_FILE` line in `.env` in Step 4.
 
 ```bash
 sudo mkdir -p /opt/calino
@@ -72,8 +77,9 @@ By the end of Step 4, `/opt/calino` holds:
 | `docker-compose.yml` | Runs the Calino container |
 | `.env` | Tells `docker-compose.yml` which image, port and config file to use |
 
-You can use a different folder. If you do, change `/opt/calino` everywhere
-below.
+Calino keeps nothing else on the server, not even in a Docker volume: the
+container is stateless. Calendars and contacts stay on your calendar servers,
+and each user's settings and remembered password live in their browser.
 
 ---
 
