@@ -52,7 +52,7 @@ Two things about your calendar servers matter before you begin:
 
 ## Step 1: Make the deployment folder
 
-Everything the deployment needs lives in `/opt/calino`:
+Everything the deployment needs lives in `/opt/calino` (you can use any other folder on your host, then change the subsequent paths):
 
 ```bash
 sudo mkdir -p /opt/calino
