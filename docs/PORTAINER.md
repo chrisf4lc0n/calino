@@ -64,19 +64,67 @@ accounts.
 ## 3. Create the stack
 
 1. Portainer → **Stacks** → **Add stack**, and name it `calino`.
-2. Choose **Repository**, with the repository URL
-   `https://github.com/chrisf4lc0n/calino`, the reference `refs/heads/main`
-   and the compose path `deploy/portainer-stack.yml`. Or choose **Web editor**
-   and paste [`deploy/portainer-stack.yml`](../deploy/portainer-stack.yml).
-3. Under **Environment variables**, add:
+2. Pick where the stack file comes from:
+   - **Repository** (recommended): repository URL
+     `https://github.com/chrisf4lc0n/calino`, reference `refs/heads/main`,
+     compose path `deploy/portainer-stack.yml`. Updates later are one click.
+   - **Web editor**: paste the contents of
+     [`deploy/portainer-stack.yml`](../deploy/portainer-stack.yml).
+3. Under **Environment variables**, set the variables below in one of the
+   three ways that follow.
+4. Click **Deploy the stack**.
 
-   | Name | Value | |
-   |---|---|---|
-   | `CALINO_CONFIG_FILE` | `/opt/calino/calino.config.json` | Required. The path **on the host** |
-   | `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calino:latest` | Optional; this is the default. Set a `sha-…` tag to stay on one build |
-   | `CALINO_PORT` | `8080` | Optional. The host port |
+| Name | Value | |
+|---|---|---|
+| `CALINO_CONFIG_FILE` | `/opt/calino/calino.config.json` | Required. The config's path **on the host** |
+| `CALINO_PORT` | `8080` | Optional. The host port; 8080 if left out |
+| `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calino:latest` | Optional; this is the default. Set a `sha-…` tag to stay on one build |
 
-4. **Deploy the stack.**
+Portainer substitutes these into the `${…}` placeholders of the stack file.
+
+### Option A: type them in
+
+Click **Add an environment variable** once per variable, and fill in its
+**name** and **value**. Only `CALINO_CONFIG_FILE` is needed:
+
+```
+name:  CALINO_CONFIG_FILE
+value: /opt/calino/calino.config.json
+```
+
+To paste several at once, click **Advanced mode** and enter one `NAME=value`
+per line, as in the file below.
+
+### Option B: load them from a file
+
+Create a file whose name ends in `.env`, for example `calino.env`, on the
+computer where your browser runs:
+
+```
+# Calino stack variables for Portainer
+CALINO_CONFIG_FILE=/opt/calino/calino.config.json
+CALINO_PORT=8080
+CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
+```
+
+Click **Load variables from .env file** and pick it. Portainer only offers
+files ending in `.env` (up to 1 MB), skips empty lines and lines starting with
+`#`, and lists each variable so you can check it before deploying. A name like
+`calino.env` is easier to pick than a hidden `.env` file.
+
+The path in the file is still a path on the **Docker host**, not on the
+computer you upload it from.
+
+### If the deploy fails
+
+Portainer shows the stack as failed, with this message, when
+`CALINO_CONFIG_FILE` is missing or misspelled:
+
+```
+required variable CALINO_CONFIG_FILE is missing a value: Set CALINO_CONFIG_FILE to the host path of calino.config.json
+```
+
+Open the stack → **Editor**, add the variable, and click **Update the stack**.
 
 Open `http://localhost:8080` on the host, or the host's address on port 8080
 from another device. Enter the master password once per browser, and the
@@ -103,8 +151,14 @@ the change:
 | Server address or username changed | Removes the old account and adds a new one |
 | New master password | Asks for the password again |
 
-To update Calino, open the stack and click **Pull and redeploy**. The config
-file is outside the image, so it is kept.
+### Update Calino itself
+
+- **Repository stack:** open the stack and click **Pull and redeploy**.
+- **Web editor stack:** open the stack → **Editor** → **Update the stack**,
+  and turn on **Re-pull image and redeploy** in the confirmation.
+
+The environment variables stay as they were, and the config file is outside
+the image, so both are kept.
 
 ## Notes
 

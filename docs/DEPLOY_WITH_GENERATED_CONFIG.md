@@ -321,11 +321,26 @@ docker run -d --name calino --restart unless-stopped -p 8080:8080 \
    `https://github.com/chrisf4lc0n/calino`, the reference `refs/heads/main`
    and the compose path `deploy/portainer-stack.yml`. Or choose **Web editor**
    and paste the contents of `/opt/calino/docker-compose.yml`.
-3. Under **Environment variables**, add `CALINO_CONFIG_FILE` with the value
-   `/opt/calino/calino.config.json`. The image defaults to
-   `ghcr.io/chrisf4lc0n/calino:latest`; set `CALINO_IMAGE` only to use another
-   tag.
+3. Under **Environment variables**, set `CALINO_CONFIG_FILE` to
+   `/opt/calino/calino.config.json`, either way:
+   - **Type it in:** click **Add an environment variable** and fill in the
+     name and value. **Advanced mode** takes several `NAME=value` lines at
+     once.
+   - **Load it from a file:** click **Load variables from .env file** and pick
+     a file whose name ends in `.env`, such as `calino.env`, containing:
+
+     ```
+     CALINO_CONFIG_FILE=/opt/calino/calino.config.json
+     CALINO_PORT=8080
+     CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
+     ```
+
+   Only `CALINO_CONFIG_FILE` is required. The image defaults to
+   `ghcr.io/chrisf4lc0n/calino:latest`, and the port to 8080.
 4. **Deploy the stack.**
+
+[PORTAINER.md](PORTAINER.md#3-create-the-stack) covers both ways in more
+detail, and the error Portainer shows when the variable is missing.
 
 The config file must be on the Docker host that Portainer manages. With a
 Portainer agent on another machine, run Steps 1 and 3 on that machine.
@@ -453,7 +468,9 @@ docker compose pull
 docker compose up -d
 ```
 
-In Portainer, open the stack and click **Pull and redeploy**. With an image
+In Portainer, open the stack and click **Pull and redeploy** (a Repository
+stack), or **Editor** → **Update the stack** with **Re-pull image and
+redeploy** turned on (a Web editor stack). With an image
 you built, rebuild it with `docker build -t calino:local .` and run
 `docker compose up -d --force-recreate`. The config lives outside the image,
 so updates keep it.
@@ -466,6 +483,7 @@ so updates keep it.
 |---|---|
 | No master password box; Calino shows its normal welcome screen | The config isn't reaching the app. Run `curl -sI http://localhost:8080/calino.config.json`. On `404`, check `CALINO_CONFIG_FILE` in `/opt/calino/.env`. Also check that `CALINO_IMAGE` is `ghcr.io/chrisf4lc0n/calino`, not the upstream image |
 | `ls -l` shows `/opt/calino/calino.config.json` is a directory | The container started before the file existed. Run `cd /opt/calino && docker compose down && rmdir calino.config.json`, then do Step 3 and Step 4 again |
+| Portainer: the stack fails with `required variable CALINO_CONFIG_FILE is missing a value` | The stack has no `CALINO_CONFIG_FILE` variable, or it is misspelled. Open the stack → **Editor**, add it, and click **Update the stack** |
 | "Wrong password" in the browser | Use the password of the **current** file. If you changed it in the generator, the new one applies |
 | Generator: `login rejected (HTTP 401)` | Wrong username or password, or the server wants an app password |
 | Generator: `no DAV principal found at that URL` | The address is wrong. Use the full DAV path from the table in Step 3 |
