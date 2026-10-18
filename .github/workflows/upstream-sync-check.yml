@@ -1,0 +1,153 @@
+# Weekly check of this fork against Ivan-Malinovski/calino. It test-merges
+# upstream's main into this repo's main, runs the checks on the merged tree,
+# and reports. It never pushes: syncing stays a manual merge (not a rebase,
+# because main is published and image sha- tags point at its commits).
+#
+# A run fails when there is something to do — new upstream commits, a merge
+# conflict or a failing check — so GitHub sends a notification. When Issues
+# are enabled on the repository it also keeps one "Upstream sync check" issue
+# up to date and closes it once the fork has caught up.
+name: Upstream sync check
+
+on:
+  schedule:
+    - cron: '17 6 * * 1' # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: upstream-sync-check
+  cancel-in-progress: true
+
+env:
+  UPSTREAM_REPO: Ivan-Malinovski/calino
+  ISSUE_TITLE: Upstream sync check
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Test-merge upstream
+        id: merge
+        run: |
+          git config user.name 'upstream-sync-check'
+          git config user.email 'upstream-sync-check@users.noreply.github.com'
+          git fetch --quiet "https://github.com/${UPSTREAM_REPO}.git" main
+          behind=$(git rev-list --count HEAD..FETCH_HEAD)
+          echo "behind=$behind" >> "$GITHUB_OUTPUT"
+          echo "upstream=$(git rev-parse --short FETCH_HEAD)" >> "$GITHUB_OUTPUT"
+          git log --oneline --no-merges HEAD..FETCH_HEAD > "$RUNNER_TEMP/new-commits.txt"
+          if [ "$behind" = 0 ]; then
+            echo "conflicts=none" >> "$GITHUB_OUTPUT"
+          elif git merge --no-commit --no-ff FETCH_HEAD > /dev/null 2>&1; then
+            echo "conflicts=none" >> "$GITHUB_OUTPUT"
+          else
+            git diff --name-only --diff-filter=U > "$RUNNER_TEMP/conflicts.txt"
+            echo "conflicts=yes" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The checks run on the merged tree, so they show whether upstream's
+      # changes break this fork's additions even when git merges cleanly.
+      - name: Setup pnpm
+        if: steps.merge.outputs.behind != '0' && steps.merge.outputs.conflicts == 'none'
+        uses: pnpm/action-setup@v6.1.0
+
+      - name: Setup Node
+        if: steps.merge.outputs.behind != '0' && steps.merge.outputs.conflicts == 'none'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Run checks on the merged tree
+        id: checks
+        if: steps.merge.outputs.behind != '0' && steps.merge.outputs.conflicts == 'none'
+        run: |
+          pnpm install --frozen-lockfile
+          result() { if "$@" > /dev/null 2>&1; then echo pass; else echo fail; fi; }
+          {
+            echo "typecheck=$(result pnpm typecheck)"
+            echo "lint=$(result pnpm lint)"
+            echo "unit=$(result pnpm test:run)"
+            echo "build=$(result pnpm build)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEHIND: ${{ steps.merge.outputs.behind }}
+          UPSTREAM_SHA: ${{ steps.merge.outputs.upstream }}
+          CONFLICTS: ${{ steps.merge.outputs.conflicts }}
+          TYPECHECK: ${{ steps.checks.outputs.typecheck }}
+          LINT: ${{ steps.checks.outputs.lint }}
+          UNIT: ${{ steps.checks.outputs.unit }}
+          BUILD: ${{ steps.checks.outputs.build }}
+        run: |
+          report="$RUNNER_TEMP/report.md"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          issues_enabled=$(gh api "repos/${GITHUB_REPOSITORY}" --jq .has_issues)
+          open_issue=""
+          if [ "$issues_enabled" = true ]; then
+            open_issue=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+              --search "in:title \"${ISSUE_TITLE}\"" --json number --jq '.[0].number // empty')
+          fi
+
+          if [ "$BEHIND" = 0 ]; then
+            echo "✅ Up to date with ${UPSTREAM_REPO}@${UPSTREAM_SHA}." | tee -a "$GITHUB_STEP_SUMMARY"
+            if [ -n "$open_issue" ]; then
+              gh issue close "$open_issue" --repo "$GITHUB_REPOSITORY" \
+                --comment "Caught up with ${UPSTREAM_REPO}@${UPSTREAM_SHA} ([run](${run_url}))."
+            fi
+            exit 0
+          fi
+
+          {
+            echo "## ${UPSTREAM_REPO} has ${BEHIND} commit(s) this fork doesn't"
+            echo
+            echo "Upstream main: \`${UPSTREAM_SHA}\` · [run](${run_url})"
+            echo
+            if [ "$CONFLICTS" = yes ]; then
+              echo "### ❌ Merge conflicts"
+              echo
+              while read -r file; do echo "- \`${file}\`"; done < "$RUNNER_TEMP/conflicts.txt"
+            else
+              echo "### Merge: ✅ clean"
+              echo
+              echo "| Check on the merged tree | Result |"
+              echo "|---|---|"
+              for pair in "typecheck:$TYPECHECK" "lint:$LINT" "unit tests:$UNIT" "build:$BUILD"; do
+                name=${pair%%:*}; value=${pair#*:}
+                [ "$value" = pass ] && mark='✅ pass' || mark='❌ fail'
+                echo "| ${name} | ${mark} |"
+              done
+            fi
+            echo
+            echo "### New upstream commits"
+            echo
+            fence=$(printf '\140\140\140')
+            echo "$fence"
+            head -n 50 "$RUNNER_TEMP/new-commits.txt"
+            echo "$fence"
+            echo
+            echo "To sync: \`git fetch https://github.com/${UPSTREAM_REPO}.git main && git merge FETCH_HEAD\`, run the checks, then push."
+          } > "$report"
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$issues_enabled" = true ]; then
+            if [ -n "$open_issue" ]; then
+              gh issue edit "$open_issue" --repo "$GITHUB_REPOSITORY" --body-file "$report"
+            else
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$ISSUE_TITLE" --body-file "$report"
+            fi
+          fi
+
+          echo "::warning title=Upstream sync::${BEHIND} new upstream commit(s); see the run summary."
+          exit 1
