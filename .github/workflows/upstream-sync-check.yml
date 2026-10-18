@@ -3,10 +3,10 @@
 # and reports. It never pushes: syncing stays a manual merge (not a rebase,
 # because main is published and image sha- tags point at its commits).
 #
-# A run fails when there is something to do — new upstream commits, a merge
-# conflict or a failing check — so GitHub sends a notification. When Issues
-# are enabled on the repository it also keeps one "Upstream sync check" issue
-# up to date and closes it once the fork has caught up.
+# New upstream commits open (or update) one "Upstream sync check" issue, and
+# the issue is closed once the fork has caught up. The run itself only fails
+# when the merge conflicts or a check fails on the merged tree. If Issues are
+# disabled on the repository, the run summary is the only report.
 name: Upstream sync check
 
 on:
@@ -149,5 +149,14 @@ jobs:
             fi
           fi
 
-          echo "::warning title=Upstream sync::${BEHIND} new upstream commit(s); see the run summary."
-          exit 1
+          if [ "$CONFLICTS" = yes ]; then
+            echo "::error title=Upstream sync::Merging upstream conflicts; see the run summary."
+            exit 1
+          fi
+          for value in "$TYPECHECK" "$LINT" "$UNIT" "$BUILD"; do
+            if [ "$value" != pass ]; then
+              echo "::error title=Upstream sync::A check fails on the merged tree; see the run summary."
+              exit 1
+            fi
+          done
+          echo "::notice title=Upstream sync::${BEHIND} new upstream commit(s) merge cleanly and pass the checks."
