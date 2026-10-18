@@ -95,6 +95,32 @@ test.describe('Runtime config — generated calino.config.json', () => {
     await expect(page.getByText('Work', { exact: true })).toBeVisible()
   })
 
+  test('connects without crypto.subtle (plain HTTP on a LAN address)', async ({
+    page,
+    baseURL,
+  }) => {
+    // Browsers hide SubtleCrypto outside secure contexts, e.g. a self-hosted
+    // instance opened as http://192.168.x.x:8080.
+    await page.addInitScript(() => {
+      Object.defineProperty(globalThis.crypto, 'subtle', {
+        configurable: true,
+        value: undefined,
+      })
+    })
+    const account: Account = {
+      name: 'Insecure DAV',
+      url: `${baseURL}/mock-caldav/`,
+      username: 'user',
+      password: 'pass',
+    }
+    await serveConfig(page, { config: generateConfig([account]) })
+
+    await page.goto('/')
+    await unlock(page)
+    await openCalendarList(page)
+    await expect(page.getByText('Work', { exact: true })).toBeVisible({ timeout: 30_000 })
+  })
+
   test('removes an account that is no longer in the config', async ({ page, baseURL }) => {
     const account: Account = {
       name: 'Second DAV',

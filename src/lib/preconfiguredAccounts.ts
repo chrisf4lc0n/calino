@@ -12,6 +12,8 @@
  * synchronously — a sync can start before the master password is entered.
  */
 
+import { sha256 } from '@noble/hashes/sha2.js'
+
 export interface CalendarSelectionEntry {
   /** Collection URL as discovered by the config generator. */
   url: string
@@ -61,8 +63,9 @@ export async function preconfiguredSecretHash(parts: {
 }): Promise<string> {
   const headers = Object.entries(parts.customHeaders ?? {}).sort(([a], [b]) => a.localeCompare(b))
   const data = new TextEncoder().encode(JSON.stringify([parts.name, parts.password, headers]))
-  const digest = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
+  // Not crypto.subtle: browsers hide it on plain-HTTP origins such as a
+  // self-hosted instance opened by LAN address.
+  return Array.from(sha256(data), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 /** Same selection, ignoring order. Absent and absent are equal. */
