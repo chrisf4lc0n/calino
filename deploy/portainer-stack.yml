@@ -1,14 +1,15 @@
 # Calino with a config made by scripts/calino-config.mjs mounted read-only.
-# Nothing is built here: run it with an image built from this folder
-# (docker build -t calino:local .) or the prebuilt one.
+# Pulls the prebuilt image; nothing is built here.
 #
-# Use it as /opt/calino/docker-compose.yml with an .env next to it, or paste it
-# into Portainer (Stacks → Add stack). See docs/DEPLOY_WITH_GENERATED_CONFIG.md.
+# Use it as /opt/calino/docker-compose.yml with an .env next to it, or in
+# Portainer (Stacks → Add stack: paste it, or point the stack at this file in
+# the repository). See docs/DEPLOY_WITH_GENERATED_CONFIG.md.
 #
 # Environment variables:
 #   CALINO_CONFIG_FILE  (required) host path of calino.config.json,
 #                       e.g. /opt/calino/calino.config.json
-#   CALINO_IMAGE        e.g. calino:local; default ghcr.io/chrisf4lc0n/calino:latest
+#   CALINO_IMAGE        default ghcr.io/chrisf4lc0n/calino:latest; a sha-… tag
+#                       pins one build, calino:local uses one you built
 #   CALINO_PORT         host port, default 8080
 #
 # To change accounts or calendars: re-run the generator on the same file and

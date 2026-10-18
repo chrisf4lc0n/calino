@@ -15,7 +15,7 @@ account and subscription connects.
 | Tool | Use it when | Where the file goes |
 |---|---|---|
 | **`scripts/calino-config.mjs`** (recommended) | You run Calino in Docker and want to change accounts without rebuilding. It tests each login, lets you choose which calendars sync, and edits an existing file | Mounted into the container at `/calino/calino.config.json`, read on every page load |
-| **The `/setup` page** | You have no Node.js or Docker at hand. It runs in the browser; nothing leaves the device | Mount it the same way, or put it in the source folder and rebuild |
+| **The `/setup` page** | You'd rather not run a script. It runs in the browser; nothing leaves the device | Mount it the same way, or put it in the source folder and rebuild |
 | **`scripts/encrypt-password.mjs`** | You want to script each encrypted value yourself | You write the file by hand |
 
 All three produce the same format, so a file from one works with the others.
@@ -24,8 +24,8 @@ Only the generator can choose calendars per account.
 ### Recommended: generator + mounted file
 
 Follow [DEPLOY_WITH_GENERATED_CONFIG.md](DEPLOY_WITH_GENERATED_CONFIG.md). It
-builds the image from this folder, runs the generator, and starts Calino with
-the file mounted, with a check after each step.
+pulls the prebuilt image, runs the generator, and starts Calino with the file
+mounted, with a check after each step.
 [PORTAINER.md](PORTAINER.md) is the short version for Portainer.
 
 A mounted file is served at `/calino.config.json` with

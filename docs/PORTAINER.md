@@ -22,27 +22,24 @@ scripts/calino-config.mjs ──writes──▶ /opt/calino/calino.config.json  
 Run every command below **on the Docker host that Portainer manages**. With a
 Portainer agent on another machine, that means the agent's machine.
 
-## 1. Get an image
+## 1. The image
 
-Either build it on the host from this source folder:
+The stack uses `ghcr.io/chrisf4lc0n/calino:latest`, for amd64 and arm64. The
+**Publish image** workflow (`.github/workflows/publish-image.yml`) rebuilds it
+on every push to `main`, and also tags each build `sha-` plus the first seven
+characters of its commit. The package is public, so Portainer needs no
+registry entry for it.
 
-```bash
-docker build -t calino:local .
-```
-
-or use the prebuilt `ghcr.io/chrisf4lc0n/calino:latest` (amd64 and arm64,
-public, no registry login). The upstream image `ghcr.io/ivan-malinovski/calino`
-does **not** read a mounted config.
+The upstream image `ghcr.io/ivan-malinovski/calino` does **not** read a
+mounted config.
 
 ## 2. Generate the config
-
-From the root of this source folder:
 
 ```bash
 sudo mkdir -p /opt/calino
 sudo chown "$(id -u):$(id -g)" /opt/calino
-cp scripts/calino-config.mjs /opt/calino/
 cd /opt/calino
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/scripts/calino-config.mjs
 docker run --rm -it --network host --user "$(id -u):$(id -g)" \
   -v /opt/calino:/work -w /work node:22-alpine \
   node calino-config.mjs --out /work/calino.config.json
@@ -64,15 +61,16 @@ accounts.
 ## 3. Create the stack
 
 1. Portainer → **Stacks** → **Add stack**, and name it `calino`.
-2. In the **Web editor**, paste the contents of
-   [`deploy/portainer-stack.yml`](../deploy/portainer-stack.yml) from this
-   source folder.
+2. Choose **Repository**, with the repository URL
+   `https://github.com/chrisf4lc0n/calino`, the reference `refs/heads/main`
+   and the compose path `deploy/portainer-stack.yml`. Or choose **Web editor**
+   and paste [`deploy/portainer-stack.yml`](../deploy/portainer-stack.yml).
 3. Under **Environment variables**, add:
 
    | Name | Value | |
    |---|---|---|
    | `CALINO_CONFIG_FILE` | `/opt/calino/calino.config.json` | Required. The path **on the host** |
-   | `CALINO_IMAGE` | `calino:local` | The image from step 1. Leave it out to use `ghcr.io/chrisf4lc0n/calino:latest` |
+   | `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calino:latest` | Optional; this is the default. Set a `sha-…` tag to stay on one build |
    | `CALINO_PORT` | `8080` | Optional. The host port |
 
 4. **Deploy the stack.**
@@ -101,6 +99,9 @@ the change:
 | Calendar selection changed | Adds or removes calendars |
 | Server address or username changed | Removes the old account and adds a new one |
 | New master password | Asks for the password again |
+
+To update Calino, open the stack and click **Pull and redeploy**. The config
+file is outside the image, so it is kept.
 
 ## Notes
 

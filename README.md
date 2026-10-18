@@ -134,23 +134,20 @@ For notification reminders to actually fire reliably, some phone makers (Xiaomi/
 
 ### With your accounts set up in advance (recommended)
 
-Build the image from this folder, generate an encrypted config with your
-CalDAV/CardDAV accounts, and mount it into the container. Users then type one
+Generate an encrypted config with your CalDAV/CardDAV accounts and mount it
+into the prebuilt image. Users then type one
 master password, and every account, chosen calendar and `.ics` feed connects
 by itself. Changing accounts later needs no rebuild.
 
 ```bash
-# From the root of this folder: build the image
-docker build -t calino:local .
-
-# Make the deployment folder
+# Make the deployment folder and download the generator and Compose file
 sudo mkdir -p /opt/calino
 sudo chown "$(id -u):$(id -g)" /opt/calino
-cp scripts/calino-config.mjs /opt/calino/
-cp deploy/portainer-stack.yml /opt/calino/docker-compose.yml
+cd /opt/calino
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/scripts/calino-config.mjs
+curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/chrisf4lc0n/calino/main/deploy/portainer-stack.yml
 
 # Generate the config (asks for each account, tests it, lets you pick calendars)
-cd /opt/calino
 docker run --rm -it --network host --user "$(id -u):$(id -g)" \
   -v /opt/calino:/work -w /work node:22-alpine \
   node calino-config.mjs --out /work/calino.config.json
@@ -158,7 +155,7 @@ docker run --rm -it --network host --user "$(id -u):$(id -g)" \
 # Start Calino with the config mounted
 cat > .env <<'EOF'
 CALINO_CONFIG_FILE=/opt/calino/calino.config.json
-CALINO_IMAGE=calino:local
+CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
 CALINO_PORT=8080
 EOF
 docker compose up -d
@@ -187,10 +184,12 @@ How it works:
   updates changed ones (password, headers, name, calendar selection) and
   removes accounts that are no longer in the file.
 - **Prebuilt image.** `ghcr.io/chrisf4lc0n/calino:latest` (amd64 and arm64)
-  is built from `main` by
-  [`.github/workflows/publish-image.yml`](./.github/workflows/publish-image.yml).
-  Set `CALINO_IMAGE` to it instead of building. The upstream image
-  `ghcr.io/ivan-malinovski/calino` does not read a mounted config.
+  is built from every push to `main` by
+  [`.github/workflows/publish-image.yml`](./.github/workflows/publish-image.yml),
+  with a `sha-` tag per build. To build it yourself instead, run
+  `docker build -t calino:local .` in a clone and set `CALINO_IMAGE=calino:local`.
+  The upstream image `ghcr.io/ivan-malinovski/calino` does not read a mounted
+  config.
 
 You can also make the config in a browser at `/setup` on any running Calino.
 See [`docs/SELF_HOSTED_CONFIG.md`](./docs/SELF_HOSTED_CONFIG.md) for the
@@ -199,13 +198,13 @@ options and the encryption details.
 ### Without preconfigured accounts
 
 ```bash
-docker build -t calino:local .
-docker run -d --name calino --restart unless-stopped -p 8080:8080 calino:local
+docker run -d --name calino --restart unless-stopped -p 8080:8080 \
+  ghcr.io/chrisf4lc0n/calino:latest
 ```
 
 Calino runs at http://localhost:8080, and each user adds their own accounts in
-**Settings**. `docker compose up -d --build` does the same using
-`docker-compose.yml`. Site URL, offline support and the other build settings
+**Settings**. To build from a clone instead, run `docker compose up -d --build`,
+which uses `docker-compose.yml`. Site URL, offline support and the other build settings
 are in [`docs/DOCKER.md`](./docs/DOCKER.md).
 
 ### Run from source (development)
