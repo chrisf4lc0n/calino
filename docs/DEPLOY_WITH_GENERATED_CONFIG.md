@@ -92,8 +92,9 @@ docker pull ghcr.io/chrisf4lc0n/calino:latest
 The image is public, for amd64 and arm64. The **Publish image** workflow
 (`.github/workflows/publish-image.yml`) rebuilds it on every push to `main` of
 [chrisf4lc0n/calino](https://github.com/chrisf4lc0n/calino). Each build is also
-tagged `sha-` plus the first seven characters of its commit, for example
-`sha-12d0287`. Use that tag instead of `latest` to stay on one build.
+tagged `sha-` plus the first seven characters of its commit; the
+[package page](https://github.com/chrisf4lc0n/calino/pkgs/container/calino)
+lists them. Use one of those tags instead of `latest` to stay on one build.
 
 The upstream image `ghcr.io/ivan-malinovski/calino` does **not** read a
 mounted config, so it won't work with this guide.
