@@ -1,14 +1,18 @@
-# Calino for Portainer (Stacks → Add stack → paste this, or point the stack at
-# this file in the repository). Pulls a prebuilt image; nothing is built.
+# Calino with a config made by scripts/calino-config.mjs mounted read-only.
+# Nothing is built here: run it with an image built from this folder
+# (docker build -t calino:local .) or the prebuilt one.
 #
-# Stack environment variables:
-#   CALINO_CONFIG_FILE  (required) host path of the calino.config.json made by
-#                       scripts/calino-config.mjs, e.g. /opt/calino/calino.config.json
+# Use it as /opt/calino/docker-compose.yml with an .env next to it, or paste it
+# into Portainer (Stacks → Add stack). See docs/DEPLOY_WITH_GENERATED_CONFIG.md.
+#
+# Environment variables:
+#   CALINO_CONFIG_FILE  (required) host path of calino.config.json,
+#                       e.g. /opt/calino/calino.config.json
+#   CALINO_IMAGE        e.g. calino:local; default ghcr.io/chrisf4lc0n/calino:latest
 #   CALINO_PORT         host port, default 8080
-#   CALINO_IMAGE        default ghcr.io/chrisf4lc0n/calino:latest
 #
-# To change accounts or calendars: re-run the generator on the same file, then
-# restart the stack (a page reload is enough, the file is read on each load).
+# To change accounts or calendars: re-run the generator on the same file and
+# reload the page. The file is read on every load; no restart is needed.
 services:
   calino:
     image: ${CALINO_IMAGE:-ghcr.io/chrisf4lc0n/calino:latest}

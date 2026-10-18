@@ -11,7 +11,7 @@ services:
     ports:
       - "8080:8080"
     # Optional runtime config, read on every page load (no rebuild needed).
-    # Generate it with scripts/calino-config.mjs; see docs/PORTAINER.md.
+    # Generate it with scripts/calino-config.mjs; see docs/DEPLOY_WITH_GENERATED_CONFIG.md.
     # volumes:
     #   - ./calino.config.json:/calino/calino.config.json:ro
     restart: unless-stopped
