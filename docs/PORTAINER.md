@@ -24,7 +24,7 @@ Portainer agent on another machine, that means the agent's machine.
 
 ## 1. The image
 
-The stack uses `ghcr.io/chrisf4lc0n/calino:latest`, for amd64 and arm64. The
+The stack uses `ghcr.io/chrisf4lc0n/calinowcg:latest`, for amd64 and arm64. The
 **Publish image** workflow (`.github/workflows/publish-image.yml`) rebuilds it
 on every push to `main`, and also tags each build `sha-` plus the first seven
 characters of its commit. The package is public, so Portainer needs no
@@ -42,7 +42,7 @@ consistently, including in `CALINO_CONFIG_FILE` below.
 sudo mkdir -p /opt/calino
 sudo chown "$(id -u):$(id -g)" /opt/calino
 cd /opt/calino
-curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/scripts/calino-config.mjs
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calinowcg/main/scripts/calino-config.mjs
 docker run --rm -it --network host --user "$(id -u):$(id -g)" \
   -v /opt/calino:/work -w /work node:22-alpine \
   node calino-config.mjs --out /work/calino.config.json
@@ -66,7 +66,7 @@ accounts.
 1. Portainer → **Stacks** → **Add stack**, and name it `calino`.
 2. Pick where the stack file comes from:
    - **Repository** (recommended): repository URL
-     `https://github.com/chrisf4lc0n/calino`, reference `refs/heads/main`,
+     `https://github.com/chrisf4lc0n/calinowcg`, reference `refs/heads/main`,
      compose path `deploy/portainer-stack.yml`. Updates later are one click.
    - **Web editor**: paste the contents of
      [`deploy/portainer-stack.yml`](../deploy/portainer-stack.yml).
@@ -78,7 +78,7 @@ accounts.
 |---|---|---|
 | `CALINO_CONFIG_FILE` | `/opt/calino/calino.config.json` | Required. The config's path **on the host** |
 | `CALINO_PORT` | `8080` | Optional. The host port; 8080 if left out |
-| `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calino:latest` | Optional; this is the default. Set a `sha-…` tag to stay on one build |
+| `CALINO_IMAGE` | `ghcr.io/chrisf4lc0n/calinowcg:latest` | Optional; this is the default. Set a `sha-…` tag to stay on one build |
 
 Portainer substitutes these into the `${…}` placeholders of the stack file.
 
@@ -104,7 +104,7 @@ computer where your browser runs:
 # Calino stack variables for Portainer
 CALINO_CONFIG_FILE=/opt/calino/calino.config.json
 CALINO_PORT=8080
-CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
+CALINO_IMAGE=ghcr.io/chrisf4lc0n/calinowcg:latest
 ```
 
 Click **Load variables from .env file** and pick it. Portainer only offers

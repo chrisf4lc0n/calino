@@ -63,8 +63,8 @@ uses `/opt/calino`.
 sudo mkdir -p /opt/calino
 sudo chown "$(id -u):$(id -g)" /opt/calino
 cd /opt/calino
-curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/scripts/calino-config.mjs
-curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/chrisf4lc0n/calino/main/deploy/portainer-stack.yml
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calinowcg/main/scripts/calino-config.mjs
+curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/chrisf4lc0n/calinowcg/main/deploy/portainer-stack.yml
 ```
 
 By the end of Step 4, `/opt/calino` holds:
@@ -86,14 +86,14 @@ and each user's settings and remembered password live in their browser.
 ## Step 2: Pull the image
 
 ```bash
-docker pull ghcr.io/chrisf4lc0n/calino:latest
+docker pull ghcr.io/chrisf4lc0n/calinowcg:latest
 ```
 
 The image is public, for amd64 and arm64. The **Publish image** workflow
 (`.github/workflows/publish-image.yml`) rebuilds it on every push to `main` of
-[chrisf4lc0n/calino](https://github.com/chrisf4lc0n/calino). Each build is also
+[chrisf4lc0n/calinowcg](https://github.com/chrisf4lc0n/calinowcg). Each build is also
 tagged `sha-` plus the first seven characters of its commit; the
-[package page](https://github.com/chrisf4lc0n/calino/pkgs/container/calino)
+[package page](https://github.com/chrisf4lc0n/calinowcg/pkgs/container/calinowcg)
 lists them. Use one of those tags instead of `latest` to stay on one build.
 
 The upstream image `ghcr.io/ivan-malinovski/calino` does **not** read a
@@ -101,7 +101,7 @@ mounted config, so it won't work with this guide.
 
 > **Building the image yourself instead?** From a clone of the repository,
 > run `docker build -t calino:local .` and use `calino:local` wherever this
-> guide says `ghcr.io/chrisf4lc0n/calino:latest`. The `Dockerfile` builds a
+> guide says `ghcr.io/chrisf4lc0n/calinowcg:latest`. The `Dockerfile` builds a
 > self-hosted image by default (`CALINO_SELF_HOSTED=true`), which is what makes
 > Calino read the mounted config; don't turn it off.
 
@@ -295,7 +295,7 @@ Tell `docker-compose.yml` what to run, then start it:
 cd /opt/calino
 cat > .env <<'EOF'
 CALINO_CONFIG_FILE=/opt/calino/calino.config.json
-CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
+CALINO_IMAGE=ghcr.io/chrisf4lc0n/calinowcg:latest
 CALINO_PORT=8080
 EOF
 docker compose up -d
@@ -312,14 +312,14 @@ The same thing as a single command, without Compose:
 ```bash
 docker run -d --name calino --restart unless-stopped -p 8080:8080 \
   -v /opt/calino/calino.config.json:/calino/calino.config.json:ro \
-  ghcr.io/chrisf4lc0n/calino:latest
+  ghcr.io/chrisf4lc0n/calinowcg:latest
 ```
 
 ### Using Portainer instead
 
 1. **Stacks** → **Add stack**, and name it `calino`.
 2. Choose **Repository** and enter the repository URL
-   `https://github.com/chrisf4lc0n/calino`, the reference `refs/heads/main`
+   `https://github.com/chrisf4lc0n/calinowcg`, the reference `refs/heads/main`
    and the compose path `deploy/portainer-stack.yml`. Or choose **Web editor**
    and paste the contents of `/opt/calino/docker-compose.yml`.
 3. Under **Environment variables**, set `CALINO_CONFIG_FILE` to
@@ -333,11 +333,11 @@ docker run -d --name calino --restart unless-stopped -p 8080:8080 \
      ```
      CALINO_CONFIG_FILE=/opt/calino/calino.config.json
      CALINO_PORT=8080
-     CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
+     CALINO_IMAGE=ghcr.io/chrisf4lc0n/calinowcg:latest
      ```
 
    Only `CALINO_CONFIG_FILE` is required. The image defaults to
-   `ghcr.io/chrisf4lc0n/calino:latest`, and the port to 8080.
+   `ghcr.io/chrisf4lc0n/calinowcg:latest`, and the port to 8080.
 4. **Deploy the stack.**
 
 [PORTAINER.md](PORTAINER.md#3-create-the-stack) covers both ways in more
@@ -359,7 +359,7 @@ docker compose ps
 
 ```
 NAME              IMAGE                               …   STATUS                        PORTS
-calino-calino-1   ghcr.io/chrisf4lc0n/calino:latest   …   Up About a minute (healthy)   0.0.0.0:8080->8080/tcp, …
+calino-calino-1   ghcr.io/chrisf4lc0n/calinowcg:latest   …   Up About a minute (healthy)   0.0.0.0:8080->8080/tcp, …
 ```
 
 Check that Calino serves the config:
@@ -482,7 +482,7 @@ so updates keep it.
 
 | What you see | Cause and fix |
 |---|---|
-| No master password box; Calino shows its normal welcome screen | The config isn't reaching the app. Run `curl -sI http://localhost:8080/calino.config.json`. On `404`, check `CALINO_CONFIG_FILE` in `/opt/calino/.env`. Also check that `CALINO_IMAGE` is `ghcr.io/chrisf4lc0n/calino`, not the upstream image |
+| No master password box; Calino shows its normal welcome screen | The config isn't reaching the app. Run `curl -sI http://localhost:8080/calino.config.json`. On `404`, check `CALINO_CONFIG_FILE` in `/opt/calino/.env`. Also check that `CALINO_IMAGE` is `ghcr.io/chrisf4lc0n/calinowcg`, not the upstream image |
 | `ls -l` shows `/opt/calino/calino.config.json` is a directory | The container started before the file existed. Run `cd /opt/calino && docker compose down && rmdir calino.config.json`, then do Step 3 and Step 4 again |
 | Portainer: the stack fails with `required variable CALINO_CONFIG_FILE is missing a value` | The stack has no `CALINO_CONFIG_FILE` variable, or it is misspelled. Open the stack → **Editor**, add it, and click **Update the stack** |
 | "Wrong password" in the browser | Use the password of the **current** file. If you changed it in the generator, the new one applies |

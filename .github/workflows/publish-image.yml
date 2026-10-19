@@ -1,4 +1,4 @@
-# Publishes ghcr.io/<owner>/calino:latest on every push to main, so a server
+# Publishes ghcr.io/<owner>/calinowcg:latest on every push to main, so a server
 # (e.g. a Portainer stack) can pull a ready image instead of building one.
 # The image reads its accounts from a mounted calino.config.json at runtime;
 # see docs/PORTAINER.md.
@@ -34,7 +34,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/calino
+          images: ghcr.io/${{ github.repository_owner }}/calinowcg
           tags: |
             type=raw,value=latest
             type=sha

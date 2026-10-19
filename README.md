@@ -1,4 +1,10 @@
-# Calino
+# Calino WCG
+
+Calino with a config generator: a fork of
+[Calino](https://github.com/Ivan-Malinovski/calino) for easy, repeatable
+deployment with Docker Compose or Portainer.
+
+Thanks to Ivan Malinovski for all his hard work on Calino.
 
 **A lightweight CalDAV calendar for the web.**
 
@@ -144,8 +150,8 @@ by itself. Changing accounts later needs no rebuild.
 sudo mkdir -p /opt/calino
 sudo chown "$(id -u):$(id -g)" /opt/calino
 cd /opt/calino
-curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calino/main/scripts/calino-config.mjs
-curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/chrisf4lc0n/calino/main/deploy/portainer-stack.yml
+curl -fsSLO https://raw.githubusercontent.com/chrisf4lc0n/calinowcg/main/scripts/calino-config.mjs
+curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/chrisf4lc0n/calinowcg/main/deploy/portainer-stack.yml
 
 # Generate the config (asks for each account, tests it, lets you pick calendars)
 docker run --rm -it --network host --user "$(id -u):$(id -g)" \
@@ -155,7 +161,7 @@ docker run --rm -it --network host --user "$(id -u):$(id -g)" \
 # Start Calino with the config mounted
 cat > .env <<'EOF'
 CALINO_CONFIG_FILE=/opt/calino/calino.config.json
-CALINO_IMAGE=ghcr.io/chrisf4lc0n/calino:latest
+CALINO_IMAGE=ghcr.io/chrisf4lc0n/calinowcg:latest
 CALINO_PORT=8080
 EOF
 docker compose up -d
@@ -184,7 +190,7 @@ How it works:
 - **Config changes sync.** On the next page load, Calino adds new accounts,
   updates changed ones (password, headers, name, calendar selection) and
   removes accounts that are no longer in the file.
-- **Prebuilt image.** `ghcr.io/chrisf4lc0n/calino:latest` (amd64 and arm64)
+- **Prebuilt image.** `ghcr.io/chrisf4lc0n/calinowcg:latest` (amd64 and arm64)
   is built from every push to `main` by
   [`.github/workflows/publish-image.yml`](./.github/workflows/publish-image.yml),
   with a `sha-` tag per build. To build it yourself instead, run
@@ -200,7 +206,7 @@ options and the encryption details.
 
 ```bash
 docker run -d --name calino --restart unless-stopped -p 8080:8080 \
-  ghcr.io/chrisf4lc0n/calino:latest
+  ghcr.io/chrisf4lc0n/calinowcg:latest
 ```
 
 Calino runs at http://localhost:8080, and each user adds their own accounts in
