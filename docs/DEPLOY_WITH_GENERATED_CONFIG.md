@@ -165,7 +165,7 @@ What the server address looks like:
 | Nextcloud | Your Nextcloud address followed by `/remote.php/dav` |
 | Baïkal | Your Baïkal address followed by `/dav.php` |
 | Radicale | Radicale's address and port, nothing after it |
-| Davis | Davis address and port `/dav`|
+| Davis | Your Davis address followed by `/dav` |
 | Fastmail, iCloud and most other services | The CalDAV address from the service's own help pages |
 
 If you leave out `https://`, the generator adds it. For a server that only
