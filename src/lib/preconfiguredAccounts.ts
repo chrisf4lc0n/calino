@@ -98,6 +98,57 @@ export function calendarPath(url: string): string {
   return path.replace(/\/+$/, '')
 }
 
+function urlOrigin(url: string): string | null {
+  try {
+    return new URL(url).origin
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Whether a stored account is the login a config entry describes: the same
+ * username on the same server. The stored URL is the one discovery resolved
+ * to, without a trailing slash, so it rarely equals the URL in the config
+ * character for character.
+ */
+export function isSameLogin(
+  account: { serverUrl: string; username: string },
+  configUrl: string,
+  username: string
+): boolean {
+  const origin = urlOrigin(account.serverUrl)
+  return account.username === username && origin !== null && origin === urlOrigin(configUrl)
+}
+
+/** Whether two URLs point at the same path, ignoring trailing slashes. */
+export function isSameUrlPath(a: string, b: string): boolean {
+  return urlOrigin(a) === urlOrigin(b) && calendarPath(a) === calendarPath(b)
+}
+
+/**
+ * The stored copies of a configured login to drop, given the one being kept.
+ * A copy still holding changes that never reached the server stays, so
+ * nothing unsynced is lost.
+ */
+export function removableDuplicates(
+  copies: Array<{ id: string }>,
+  keptId: string | undefined,
+  calendarIdsOf: (accountId: string) => string[],
+  events: Array<{ calendarId: string; syncStatus?: string }>
+): string[] {
+  return copies
+    .filter((copy) => copy.id !== keptId)
+    .filter((copy) => {
+      const calendarIds = new Set(calendarIdsOf(copy.id))
+      return !events.some(
+        (e) =>
+          calendarIds.has(e.calendarId) && e.syncStatus !== undefined && e.syncStatus !== 'synced'
+      )
+    })
+    .map((copy) => copy.id)
+}
+
 function isSettingsCalendar(cal: { name: string; url?: string }): boolean {
   return cal.name === 'Calino Settings' || Boolean(cal.url?.includes('calino-settings'))
 }

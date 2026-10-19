@@ -57,7 +57,10 @@ import { useContactStore } from '@/store/contactStore'
 import {
   filterSelectedCalendars,
   preconfiguredSecretHash,
+  isSameLogin,
+  isSameUrlPath,
   readPreconfiguredRegistry,
+  removableDuplicates,
   sameCalendarSelection,
   writePreconfiguredRegistry,
   type CalendarSelectionEntry,
@@ -2311,14 +2314,32 @@ export function useCalDAVInstance(): UseCalDAVReturn {
         let accountId = findTracked(url, username)
 
         // Accounts connected before this bookkeeping existed (or added by
-        // hand for the same login) are adopted, then brought up to date.
+        // hand for the same login) are adopted, then brought up to date. The
+        // stored URL is the resolved one, so match the login, not the string;
+        // prefer a copy whose URL is the config's, give or take a slash.
+        const untracked = storage
+          .getAllAccounts()
+          .filter((a) => !registry[a.id] && isSameLogin(a, url, username))
         if (!accountId) {
-          accountId = storage
-            .getAllAccounts()
-            .find((a) => !registry[a.id] && a.serverUrl === url && a.username === username)?.id
+          const adopted = untracked.find((a) => isSameUrlPath(a.serverUrl, url)) ?? untracked[0]
+          accountId = adopted?.id
           if (accountId) {
             registry[accountId] = { configUrl: url, username, secretHash: '', calendars: undefined }
           }
+        }
+
+        // Older builds compared those strings and added the login again on
+        // every page load. Drop the extra copies, except one still holding
+        // changes that never reached the server.
+        const removable = removableDuplicates(
+          untracked,
+          accountId,
+          (id) => storage.getCalendarsByAccountId(id).map((c) => c.id),
+          useCalendarStore.getState().events
+        )
+        for (const id of removable) {
+          console.log(`[CalDAV] Removing duplicate of preconfigured account: ${id}`)
+          await removeAccount(id)
         }
 
         try {

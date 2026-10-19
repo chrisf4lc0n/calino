@@ -8,7 +8,7 @@
  */
 import { execFileSync } from 'node:child_process'
 import { test, expect, type Page } from '@playwright/test'
-import { clearState } from './fixtures/localstorage'
+import { clearState, seedAccount, STORAGE_KEYS } from './fixtures/localstorage'
 
 const MASTER = 'e2e-master-password'
 
@@ -47,6 +47,15 @@ async function unlock(page: Page) {
   await prompt.locator('input[type="password"]').fill(MASTER)
   await prompt.locator('input[type="password"]').press('Enter')
   await expect(prompt).toBeHidden({ timeout: 15_000 })
+}
+
+/** Accounts in localStorage, as [name, username] pairs. */
+async function storedAccounts(page: Page): Promise<Array<[string, string]>> {
+  return page.evaluate((key) => {
+    const raw = localStorage.getItem(key)
+    const list = raw ? (JSON.parse(raw) as Array<{ name: string; username: string }>) : []
+    return list.map((a) => [a.name, a.username] as [string, string])
+  }, STORAGE_KEYS.accounts)
 }
 
 async function openCalendarList(page: Page) {
@@ -119,6 +128,51 @@ test.describe('Runtime config — generated calino.config.json', () => {
     await unlock(page)
     await openCalendarList(page)
     await expect(page.getByText('Work', { exact: true })).toBeVisible({ timeout: 30_000 })
+  })
+
+  test('merges duplicate copies of a configured login left by older builds', async ({
+    page,
+    baseURL,
+  }) => {
+    // Older builds compared the config URL with the stored one character by
+    // character. The stored URL is the probe-resolved one without a trailing
+    // slash, so each page load added the same login again.
+    for (let i = 0; i < 3; i++) {
+      await seedAccount(page, {
+        name: 'Davis',
+        serverUrl: `${baseURL}/mock-caldav`,
+        username: 'user',
+        password: 'pass',
+      })
+    }
+    await seedAccount(page, {
+      name: 'Someone else',
+      serverUrl: `${baseURL}/mock-caldav`,
+      username: 'other',
+      password: 'pass',
+    })
+    const account: Account = {
+      name: 'Davis',
+      url: `${baseURL}/mock-caldav/`,
+      username: 'user',
+      password: 'pass',
+    }
+    await serveConfig(page, { config: generateConfig([account]) })
+
+    await page.goto('/')
+    await unlock(page)
+
+    await expect
+      .poll(async () => (await storedAccounts(page)).filter(([, u]) => u === 'user').length, {
+        timeout: 20_000,
+      })
+      .toBe(1)
+    expect((await storedAccounts(page)).filter(([, u]) => u === 'other')).toHaveLength(1)
+
+    // And it stays that way on the next load.
+    await page.reload()
+    await page.waitForTimeout(3_000)
+    expect((await storedAccounts(page)).filter(([, u]) => u === 'user')).toHaveLength(1)
   })
 
   test('removes an account that is no longer in the config', async ({ page, baseURL }) => {

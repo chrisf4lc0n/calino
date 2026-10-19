@@ -3,8 +3,11 @@ import { createLocalStorageMock } from '@/test/storageMock'
 import {
   calendarPath,
   filterSelectedCalendars,
+  isSameLogin,
+  isSameUrlPath,
   preconfiguredSecretHash,
   readPreconfiguredRegistry,
+  removableDuplicates,
   sameCalendarSelection,
   writePreconfiguredRegistry,
 } from '../preconfiguredAccounts'
@@ -83,5 +86,51 @@ describe('preconfiguredAccounts', () => {
     const two = await preconfiguredSecretHash({ name: 'n', password: 'p2' })
     expect(one).not.toBe(two)
     expect(one).toBe(await preconfiguredSecretHash({ name: 'n', password: 'p1' }))
+  })
+})
+
+describe('matching a stored account to a config entry', () => {
+  const stored = { serverUrl: 'https://davis.example.org/dav', username: 'chris' }
+
+  it('treats the same username on the same server as the same login', () => {
+    // Discovery stores the resolved URL without its trailing slash.
+    expect(isSameLogin(stored, 'https://davis.example.org/dav/', 'chris')).toBe(true)
+    expect(isSameLogin(stored, 'https://DAVIS.example.org/', 'chris')).toBe(true)
+  })
+
+  it('keeps different users and different servers apart', () => {
+    expect(isSameLogin(stored, 'https://davis.example.org/dav/', 'someone')).toBe(false)
+    expect(isSameLogin(stored, 'https://other.example.org/dav/', 'chris')).toBe(false)
+    expect(isSameLogin(stored, 'not a url', 'chris')).toBe(false)
+  })
+
+  it('compares paths ignoring a trailing slash', () => {
+    expect(isSameUrlPath('https://davis.example.org/dav', 'https://davis.example.org/dav/')).toBe(
+      true
+    )
+    expect(isSameUrlPath('https://davis.example.org/dav', 'https://davis.example.org/')).toBe(false)
+  })
+})
+
+describe('removableDuplicates', () => {
+  const calendarsOf = (id: string) => [`${id}-cal`]
+
+  it('drops every copy except the kept one', () => {
+    const copies = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+    expect(removableDuplicates(copies, 'a', calendarsOf, [])).toEqual(['b', 'c'])
+  })
+
+  it('keeps a copy holding changes that never reached the server', () => {
+    const copies = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+    const events = [
+      { calendarId: 'b-cal', syncStatus: 'pending' },
+      { calendarId: 'c-cal', syncStatus: 'synced' },
+    ]
+    expect(removableDuplicates(copies, 'a', calendarsOf, events)).toEqual(['c'])
+  })
+
+  it('treats a failed upload as unsynced too', () => {
+    const events = [{ calendarId: 'b-cal', syncStatus: 'failed' }]
+    expect(removableDuplicates([{ id: 'a' }, { id: 'b' }], 'a', calendarsOf, events)).toEqual([])
   })
 })
