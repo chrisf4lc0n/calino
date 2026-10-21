@@ -877,5 +877,21 @@
       "deleting": "Deleting…",
       "dismiss": "Dismiss"
     }
+  },
+  "serverConfig": {
+    "groupLabel": "Server config",
+    "label": "Download config for the server",
+    "descWithConfig": "Adds the accounts and calendar feeds added in this browser to the server's config, encrypted with the current master password. Copy the downloaded calino.config.json over the file on the server, then reload Calino.",
+    "descWithoutConfig": "Turns the accounts and calendar feeds in this browser into a calino.config.json for the server, encrypted with a master password you choose. Mount it into the container and redeploy; every browser then unlocks them with that password.",
+    "button": "Download config",
+    "working": "Encrypting…",
+    "passwordLabel": "Choose a master password",
+    "repeatLabel": "Repeat the master password",
+    "tooShort": "Use at least {{min}} characters.",
+    "mismatch": "The passwords do not match.",
+    "unlockFirst": "Unlock Calino with the master password first.",
+    "nothingToExport": "There are no accounts or calendar feeds to put in a config.",
+    "downloaded": "Downloaded calino.config.json. Accounts: {{accounts}} ({{newAccounts}} new). Calendar feeds: {{feeds}} ({{newFeeds}} new). Copy it over the file on the server.",
+    "failed": "Could not build the config: {{message}}"
   }
 }

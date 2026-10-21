@@ -877,5 +877,21 @@
       "deleting": "Wird gelöscht …",
       "dismiss": "Verwerfen"
     }
+  },
+  "serverConfig": {
+    "groupLabel": "Server-Konfiguration",
+    "label": "Konfiguration für den Server herunterladen",
+    "descWithConfig": "Fügt die in diesem Browser hinzugefügten Konten und Kalender-Feeds der Konfiguration des Servers hinzu, verschlüsselt mit dem aktuellen Master-Passwort. Kopiere die heruntergeladene calino.config.json über die Datei auf dem Server und lade Calino dann neu.",
+    "descWithoutConfig": "Macht aus den Konten und Kalender-Feeds in diesem Browser eine calino.config.json für den Server, verschlüsselt mit einem Master-Passwort deiner Wahl. Binde sie in den Container ein und stelle ihn neu bereit; jeder Browser entsperrt sie dann mit diesem Passwort.",
+    "button": "Konfiguration herunterladen",
+    "working": "Wird verschlüsselt…",
+    "passwordLabel": "Master-Passwort wählen",
+    "repeatLabel": "Master-Passwort wiederholen",
+    "tooShort": "Verwende mindestens {{min}} Zeichen.",
+    "mismatch": "Die Passwörter stimmen nicht überein.",
+    "unlockFirst": "Entsperre Calino zuerst mit dem Master-Passwort.",
+    "nothingToExport": "Es gibt keine Konten oder Kalender-Feeds für eine Konfiguration.",
+    "downloaded": "calino.config.json heruntergeladen. Konten: {{accounts}} ({{newAccounts}} neu). Kalender-Feeds: {{feeds}} ({{newFeeds}} neu). Kopiere sie über die Datei auf dem Server.",
+    "failed": "Konfiguration konnte nicht erstellt werden: {{message}}"
   }
 }

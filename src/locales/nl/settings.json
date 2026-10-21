@@ -877,5 +877,21 @@
       "deleting": "Verwijderen…",
       "dismiss": "Negeren"
     }
+  },
+  "serverConfig": {
+    "groupLabel": "Serverconfiguratie",
+    "label": "Configuratie voor de server downloaden",
+    "descWithConfig": "Voegt de accounts en agendafeeds die in deze browser zijn toegevoegd toe aan de configuratie van de server, versleuteld met het huidige hoofdwachtwoord. Kopieer de gedownloade calino.config.json over het bestand op de server en laad Calino daarna opnieuw.",
+    "descWithoutConfig": "Maakt van de accounts en agendafeeds in deze browser een calino.config.json voor de server, versleuteld met een hoofdwachtwoord dat je kiest. Koppel het in de container en implementeer opnieuw; elke browser ontgrendelt ze daarna met dat wachtwoord.",
+    "button": "Configuratie downloaden",
+    "working": "Versleutelen…",
+    "passwordLabel": "Kies een hoofdwachtwoord",
+    "repeatLabel": "Herhaal het hoofdwachtwoord",
+    "tooShort": "Gebruik minstens {{min}} tekens.",
+    "mismatch": "De wachtwoorden komen niet overeen.",
+    "unlockFirst": "Ontgrendel Calino eerst met het hoofdwachtwoord.",
+    "nothingToExport": "Er zijn geen accounts of agendafeeds om in een configuratie te zetten.",
+    "downloaded": "calino.config.json gedownload. Accounts: {{accounts}} ({{newAccounts}} nieuw). Agendafeeds: {{feeds}} ({{newFeeds}} nieuw). Kopieer het over het bestand op de server.",
+    "failed": "Kan de configuratie niet maken: {{message}}"
   }
 }

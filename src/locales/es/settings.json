@@ -877,5 +877,21 @@
       "deleting": "Eliminando…",
       "dismiss": "Descartar"
     }
+  },
+  "serverConfig": {
+    "groupLabel": "Configuración del servidor",
+    "label": "Descargar la configuración para el servidor",
+    "descWithConfig": "Añade a la configuración del servidor las cuentas y los feeds de calendario añadidos en este navegador, cifrados con la contraseña maestra actual. Copia el calino.config.json descargado sobre el archivo del servidor y recarga Calino.",
+    "descWithoutConfig": "Convierte las cuentas y los feeds de calendario de este navegador en un calino.config.json para el servidor, cifrado con una contraseña maestra que elijas. Móntalo en el contenedor y vuelve a desplegar; después, cada navegador los desbloquea con esa contraseña.",
+    "button": "Descargar configuración",
+    "working": "Cifrando…",
+    "passwordLabel": "Elige una contraseña maestra",
+    "repeatLabel": "Repite la contraseña maestra",
+    "tooShort": "Usa al menos {{min}} caracteres.",
+    "mismatch": "Las contraseñas no coinciden.",
+    "unlockFirst": "Primero desbloquea Calino con la contraseña maestra.",
+    "nothingToExport": "No hay cuentas ni feeds de calendario para incluir en una configuración.",
+    "downloaded": "Se ha descargado calino.config.json. Cuentas: {{accounts}} ({{newAccounts}} nuevas). Feeds de calendario: {{feeds}} ({{newFeeds}} nuevos). Cópialo sobre el archivo del servidor.",
+    "failed": "No se pudo crear la configuración: {{message}}"
   }
 }

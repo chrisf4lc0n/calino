@@ -877,5 +877,21 @@
       "deleting": "Sletter …",
       "dismiss": "Afvis"
     }
+  },
+  "serverConfig": {
+    "groupLabel": "Serverkonfiguration",
+    "label": "Download konfiguration til serveren",
+    "descWithConfig": "Tilføjer konti og kalenderfeeds, der er tilføjet i denne browser, til serverens konfiguration, krypteret med den nuværende hovedadgangskode. Kopiér den downloadede calino.config.json over filen på serveren, og genindlæs derefter Calino.",
+    "descWithoutConfig": "Gør konti og kalenderfeeds i denne browser til en calino.config.json til serveren, krypteret med en hovedadgangskode, du vælger. Montér den i containeren og udrul igen; alle browsere låser dem derefter op med den adgangskode.",
+    "button": "Download konfiguration",
+    "working": "Krypterer…",
+    "passwordLabel": "Vælg en hovedadgangskode",
+    "repeatLabel": "Gentag hovedadgangskoden",
+    "tooShort": "Brug mindst {{min}} tegn.",
+    "mismatch": "Adgangskoderne er ikke ens.",
+    "unlockFirst": "Lås først Calino op med hovedadgangskoden.",
+    "nothingToExport": "Der er ingen konti eller kalenderfeeds at lægge i en konfiguration.",
+    "downloaded": "calino.config.json er downloadet. Konti: {{accounts}} ({{newAccounts}} nye). Kalenderfeeds: {{feeds}} ({{newFeeds}} nye). Kopiér den over filen på serveren.",
+    "failed": "Kunne ikke lave konfigurationen: {{message}}"
   }
 }

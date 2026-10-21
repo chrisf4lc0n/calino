@@ -171,6 +171,27 @@ Open http://localhost:8080 and enter the master password. To change accounts,
 run the same generator command again and reload the page. `/opt/calino` is
 only an example path; use any folder, as long as you change it everywhere.
 
+#### Adding accounts from the browser
+
+Accounts and calendar feeds added under **Settings → Sync** (**Add calendar
+account**, **Subscribe to calendar (.ics)**) normally live only in that
+browser. To share them through the server, open **Settings → Sync → Server
+config** and click **Download config**:
+
+- **With a config already mounted**, the download is your current config plus
+  the browser's new accounts and feeds, encrypted with the same master
+  password. Copy it over the file on the server, then restart the container
+  (or just reload the page if you overwrote the file in place). Every browser
+  then gets the new calendars.
+- **Without a config yet** (the container started without one), you choose a
+  master password and the download holds everything in the browser. Put it in
+  `/opt/calino`, point the stack at it with `CALINO_CONFIG_FILE`, and redeploy.
+  Calino then asks for that master password and takes over the existing
+  accounts instead of adding them twice.
+
+Accounts added this way sync all their calendars; run the generator on the
+file to pick calendars. The full steps are in the guide below.
+
 **[`docs/DEPLOY_WITH_GENERATED_CONFIG.md`](./docs/DEPLOY_WITH_GENERATED_CONFIG.md)
 is the full step-by-step guide**: every generator question, how to check each
 step, access from other devices, HTTPS, and troubleshooting. For Portainer,

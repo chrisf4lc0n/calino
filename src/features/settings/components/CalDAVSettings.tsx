@@ -11,6 +11,7 @@ import {
 } from '@/features/caldav/client/diagnostics'
 import type { CalDAVAccount } from '@/features/caldav/types'
 import { DiagnosticsPanel } from './DiagnosticsPanel'
+import { ServerConfigExport } from './ServerConfigExport'
 import { AddCalendarModal } from '@/features/calendar/components/AddCalendarModal'
 import { SubscribeCalendarModal } from '@/features/calendar/components/SubscribeCalendarModal'
 import { useWebcalSubscriptions } from '@/features/webcal/hooks/useWebcalSubscriptions'
@@ -398,6 +399,8 @@ export function CalDAVSettings({ searchControl }: { searchControl?: JSX.Element 
           {t('caldav.subscribe')}
         </button>
       </div>
+
+      <ServerConfigExport accounts={accounts} subscriptions={subscriptions} />
 
       <AddCalendarModal isOpen={isAddingAccount} onClose={() => setIsAddingAccount(false)} />
       {editingAccount && (

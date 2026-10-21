@@ -151,6 +151,13 @@ the change:
 | Server address or username changed | Removes the old account and adds a new one |
 | New master password | Asks for the password again |
 
+You can also add an account or feed in Calino itself and then use **Settings
+→ Sync → Server config → Download config** to get an updated config, or a
+first one if the stack runs without a config. Copy it over the file on the
+host and restart the stack; with a first config, add `CALINO_CONFIG_FILE` and
+redeploy instead. See
+[the full guide](DEPLOY_WITH_GENERATED_CONFIG.md#or-add-accounts-in-the-browser-and-download-the-config).
+
 ### Update Calino itself
 
 - **Repository stack:** open the stack and click **Pull and redeploy**.

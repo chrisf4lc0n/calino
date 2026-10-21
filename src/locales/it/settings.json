@@ -877,5 +877,21 @@
       "deleting": "Eliminazione…",
       "dismiss": "Ignora"
     }
+  },
+  "serverConfig": {
+    "groupLabel": "Configurazione del server",
+    "label": "Scarica la configurazione per il server",
+    "descWithConfig": "Aggiunge alla configurazione del server gli account e i feed di calendario aggiunti in questo browser, cifrati con la password principale attuale. Copia il calino.config.json scaricato sopra il file sul server, poi ricarica Calino.",
+    "descWithoutConfig": "Trasforma gli account e i feed di calendario di questo browser in un calino.config.json per il server, cifrato con una password principale a tua scelta. Montalo nel container e ripeti il deploy; ogni browser li sblocca poi con quella password.",
+    "button": "Scarica configurazione",
+    "working": "Cifratura…",
+    "passwordLabel": "Scegli una password principale",
+    "repeatLabel": "Ripeti la password principale",
+    "tooShort": "Usa almeno {{min}} caratteri.",
+    "mismatch": "Le password non coincidono.",
+    "unlockFirst": "Prima sblocca Calino con la password principale.",
+    "nothingToExport": "Non ci sono account o feed di calendario da inserire in una configurazione.",
+    "downloaded": "calino.config.json scaricato. Account: {{accounts}} ({{newAccounts}} nuovi). Feed di calendario: {{feeds}} ({{newFeeds}} nuovi). Copialo sopra il file sul server.",
+    "failed": "Impossibile creare la configurazione: {{message}}"
   }
 }

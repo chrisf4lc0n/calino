@@ -7,6 +7,7 @@
  * bind mount (see docs/PORTAINER.md).
  */
 import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { test, expect, type Page } from '@playwright/test'
 import { clearState, seedAccount, STORAGE_KEYS } from './fixtures/localstorage'
 
@@ -172,6 +173,56 @@ test.describe('Runtime config — generated calino.config.json', () => {
     // And it stays that way on the next load.
     await page.reload()
     await page.waitForTimeout(3_000)
+    expect((await storedAccounts(page)).filter(([, u]) => u === 'user')).toHaveLength(1)
+  })
+
+  test('downloads a config for the server that the next load adopts', async ({ page, baseURL }) => {
+    // Started without a config: the account was added in this browser only.
+    await seedAccount(page, {
+      name: 'Mock DAV',
+      serverUrl: `${baseURL}/mock-caldav`,
+      username: 'user',
+      password: 'pass',
+    })
+    const served: { config: Record<string, unknown> | null } = { config: null }
+    await page.route('**/calino.config.json', (route) =>
+      served.config
+        ? route.fulfill({ json: served.config, headers: { 'Cache-Control': 'no-store' } })
+        : route.fulfill({ status: 404, body: '' })
+    )
+
+    await page.goto('/settings?tab=caldav')
+    await page.locator('[data-action="download-server-config"]').click()
+    await page.locator('[data-component="server-config-password"]').fill(MASTER)
+    await page.locator('[data-component="server-config-password-repeat"]').fill(MASTER)
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.locator('[data-action="download-server-config-confirm"]').click(),
+    ])
+    expect(download.suggestedFilename()).toBe('calino.config.json')
+    await expect(page.locator('[data-component="server-config-status"]')).toHaveAttribute(
+      'data-status',
+      'success'
+    )
+    const config = JSON.parse(readFileSync(await download.path(), 'utf8'))
+    expect(config.version).toBe(1)
+    expect(config.accounts).toHaveLength(1)
+    expect(config.accounts[0].name).toBe('Mock DAV')
+
+    // The file is mounted and the stack redeployed: Calino asks for the new
+    // master password and takes the existing account over, without a copy.
+    served.config = config
+    await page.goto('/')
+    await unlock(page)
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            Object.keys(JSON.parse(localStorage.getItem('calino.preconfigured.accounts') ?? '{}'))
+          ),
+        { timeout: 20_000 }
+      )
+      .toHaveLength(1)
     expect((await storedAccounts(page)).filter(([, u]) => u === 'user')).toHaveLength(1)
   })
 

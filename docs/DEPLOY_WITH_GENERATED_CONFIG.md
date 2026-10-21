@@ -449,10 +449,56 @@ On its next load, each browser applies the change:
 | Server address or username changed | Removes the old account and adds a new one |
 | New master password | Asks for the password again |
 
-Only change the file with the generator. The generator rewrites the file in
-place, so the running container sees the new version at once. Editors that
-save by replacing the file break the mount until the container restarts, and
-the values are encrypted anyway.
+Change the file with the generator or with the browser download below; the
+values are encrypted, so it can't be edited by hand. The generator rewrites
+the file in place, so the running container sees the new version at once.
+Anything that replaces the file instead (moving a new file over it, some
+editors) breaks the mount until the container restarts.
+
+### Or: add accounts in the browser and download the config
+
+Accounts added under **Settings → Sync** with **Add calendar account** or
+**Subscribe to calendar (.ics)** live only in that browser. To give them to
+every browser, put them in the server's config:
+
+1. Add the account or feed in Calino as usual and check that it syncs.
+2. Open **Settings → Sync**, and under **Server config** click **Download
+   config**. Your browser saves `calino.config.json`. It contains every
+   account and feed of the current config exactly as they were, plus the new
+   ones, encrypted with the same master password.
+3. Copy it to the server, over the existing file:
+
+   ```bash
+   scp ~/Downloads/calino.config.json yourserver:/opt/calino/calino.config.json
+   ```
+
+4. Restart the container (`docker compose restart` in `/opt/calino`, or
+   **Restart** on the stack in Portainer) and reload Calino. If the copy
+   overwrote the file in place, a reload alone is enough, but a restart is
+   always safe.
+
+New accounts sync all their calendars. To pick calendars, run the generator
+on the file afterwards (Step 6 above) and edit the account.
+
+The downloaded file holds your accounts, encrypted. Delete it from your
+Downloads folder once it's on the server.
+
+### Started without a config? Add one later
+
+If you ran Calino without a mounted config and added accounts in the browser,
+you can turn them into a config at any time:
+
+1. Open **Settings → Sync** and click **Download config** under **Server
+   config**. Choose a master password (at least 8 characters, entered twice).
+   Your browser saves `calino.config.json` with all its accounts and feeds.
+2. Copy it to `/opt/calino/calino.config.json` on the server.
+3. Point the stack at it: set `CALINO_CONFIG_FILE=/opt/calino/calino.config.json`
+   (in `.env`, or in the stack's environment variables in Portainer), and
+   redeploy (`docker compose up -d`). A mount only takes effect when the
+   container is created, so a plain restart is not enough this time.
+4. Reload Calino. It asks for the master password you chose, and takes over
+   the accounts already in that browser instead of adding them a second time.
+   Other browsers get the same accounts after entering the password.
 
 ### Undo the last change
 
@@ -486,6 +532,8 @@ so updates keep it.
 | No master password box; Calino shows its normal welcome screen | The config isn't reaching the app. Run `curl -sI http://localhost:8080/calino.config.json`. On `404`, check `CALINO_CONFIG_FILE` in `/opt/calino/.env`. Also check that `CALINO_IMAGE` is `ghcr.io/chrisf4lc0n/calinowcg`, not the upstream image |
 | `ls -l` shows `/opt/calino/calino.config.json` is a directory | The container started before the file existed. Run `cd /opt/calino && docker compose down && rmdir calino.config.json`, then do Step 3 and Step 4 again |
 | Portainer: the stack fails with `required variable CALINO_CONFIG_FILE is missing a value` | The stack has no `CALINO_CONFIG_FILE` variable, or it is misspelled. Open the stack → **Editor**, add it, and click **Update the stack** |
+| **Download config** says "Unlock Calino with the master password first." | The server serves a config that this browser hasn't unlocked. Enter the master password in the prompt, then download again |
+| New accounts from a downloaded config don't appear in other browsers | The file on the server wasn't replaced, or the container still sees the old one. Check the file's date with `ls -l /opt/calino`, then restart the container |
 | "Wrong password" in the browser | Use the password of the **current** file. If you changed it in the generator, the new one applies |
 | Generator: `login rejected (HTTP 401)` | Wrong username or password, or the server wants an app password |
 | Generator: `no DAV principal found at that URL` | The address is wrong. Use the full DAV path from the table in Step 3 |

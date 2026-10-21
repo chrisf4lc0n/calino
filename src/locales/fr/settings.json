@@ -877,5 +877,21 @@
       "deleting": "Suppression…",
       "dismiss": "Ignorer"
     }
+  },
+  "serverConfig": {
+    "groupLabel": "Configuration du serveur",
+    "label": "Télécharger la configuration pour le serveur",
+    "descWithConfig": "Ajoute à la configuration du serveur les comptes et les flux de calendrier ajoutés dans ce navigateur, chiffrés avec le mot de passe maître actuel. Copiez le calino.config.json téléchargé par-dessus le fichier du serveur, puis rechargez Calino.",
+    "descWithoutConfig": "Transforme les comptes et les flux de calendrier de ce navigateur en un calino.config.json pour le serveur, chiffré avec un mot de passe maître de votre choix. Montez-le dans le conteneur et redéployez ; chaque navigateur les déverrouille ensuite avec ce mot de passe.",
+    "button": "Télécharger la configuration",
+    "working": "Chiffrement…",
+    "passwordLabel": "Choisissez un mot de passe maître",
+    "repeatLabel": "Répétez le mot de passe maître",
+    "tooShort": "Utilisez au moins {{min}} caractères.",
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "unlockFirst": "Déverrouillez d'abord Calino avec le mot de passe maître.",
+    "nothingToExport": "Il n'y a aucun compte ni flux de calendrier à mettre dans une configuration.",
+    "downloaded": "calino.config.json téléchargé. Comptes : {{accounts}} ({{newAccounts}} nouveaux). Flux de calendrier : {{feeds}} ({{newFeeds}} nouveaux). Copiez-le par-dessus le fichier du serveur.",
+    "failed": "Impossible de créer la configuration : {{message}}"
   }
 }
