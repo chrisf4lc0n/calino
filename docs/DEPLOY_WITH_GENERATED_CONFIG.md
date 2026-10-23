@@ -46,7 +46,9 @@ Two things about your calendar servers matter before you begin:
 - **Each server must allow CORS from Calino's address**, for example
   `http://localhost:8080`, or whatever address people type to reach Calino. Nextcloud
   and Baïkal need configuring; see [CORS_PROXY.md](CORS_PROXY.md) for the
-  headers, or for a proxy if you cannot change the server.
+  headers, or for a proxy if you cannot change the server. With Nginx Proxy
+  Manager in front of the DAV server, [NGINX_PROXY_MANAGER.md](NGINX_PROXY_MANAGER.md)
+  has a ready-made snippet.
 
 ---
 
@@ -410,7 +412,8 @@ For access from outside your network, put Calino behind a reverse proxy such
 as Caddy, Traefik or Nginx Proxy Manager, forwarding to port 8080. Nothing in
 Calino changes. Add the final `https://` address to each calendar server's
 CORS settings. [DOCKER.md](DOCKER.md#reverse-proxy) has example proxy
-configurations.
+configurations. For Nginx Proxy Manager, including an optional Authelia login
+in front of Calino, see [NGINX_PROXY_MANAGER.md](NGINX_PROXY_MANAGER.md).
 
 ---
 
@@ -539,7 +542,7 @@ so updates keep it.
 | Generator: `no DAV principal found at that URL` | The address is wrong. Use the full DAV path from the table in Step 3 |
 | Generator: `could not reach the server` | This machine can't reach the server (DNS, firewall or certificate). Fix that, or choose **Keep it untested** if the browsers can reach it |
 | Generator: `EACCES: permission denied` when editing | The file belongs to `root` because an earlier run lacked `--user`. Run `sudo chown "$(id -u):$(id -g)" /opt/calino/calino.config.json*` |
-| Unlocks, but no calendars appear | Usually CORS. Open the browser's developer console. The calendar server must allow Calino's exact address. See [CORS_PROXY.md](CORS_PROXY.md). In Calino, **Settings → Sync → Diagnose** tests the server step by step |
+| Unlocks, but no calendars appear | Usually CORS. Open the browser's developer console. The calendar server must allow Calino's exact address. See [CORS_PROXY.md](CORS_PROXY.md), or [NGINX_PROXY_MANAGER.md](NGINX_PROXY_MANAGER.md) for Nginx Proxy Manager. In Calino, **Settings → Sync → Diagnose** tests the server step by step |
 | A calendar created on the server doesn't appear | That account syncs a fixed selection. Re-run the generator, edit the account, and add the calendar or choose to sync all |
 | Changes don't appear after regenerating | Reload the page. If they still don't appear, run `docker compose restart` in `/opt/calino`: the file was replaced rather than rewritten |
 | Generator ends with `No accounts or feeds — nothing to write.` | A config needs at least one account or feed. To stop using a config, remove the `volumes` lines from `docker-compose.yml` |

@@ -41,6 +41,8 @@ Due to the browser-based nature of Calino, a web CalDAV/CardDAV/JMAP server must
 
 With a proxy, requests pass through the proxy operator, so use your own proxy or configure CORS directly when that matters. The hosted proxy sees connection metadata and request URLs, but is designed not to log credentials or calendar bodies. See [`docs/CORS_PROXY.md`](./docs/CORS_PROXY.md) for the hosted proxy's limits and self-hosting options.
 
+Running Nginx Proxy Manager? [`docs/NGINX_PROXY_MANAGER.md`](./docs/NGINX_PROXY_MANAGER.md) has the CORS snippet for your DAV server's proxy host, and how to put Calino behind an Authelia login.
+
 ### DAV behind an authentication gateway
 
 Using Pangolin, Cloudflare Access, or a similar gateway in front of your server? See [`docs/AUTH_GATEWAY.md`](./docs/AUTH_GATEWAY.md) for the headers and CORS preflight setup.
